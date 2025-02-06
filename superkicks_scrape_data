@@ -1,0 +1,574 @@
+{
+    "request_id": "e93e171b-9457-4e9c-bec8-18a8502b3593",
+    "status": "completed",
+    "website_url": "https://www.superkicks.in/",
+    "user_prompt": "Extract all the content of this page and tell me all the products that are getting sold.Tell me about the return and refund policy . Tell me about the mode of payment and also tell me about their contact information ",
+    "result": {
+        "products": [
+            {
+                "name": "PALAIS ARTISAN MULTI",
+                "vendor": "Puma",
+                "price": "INR 5,999"
+            },
+            {
+                "name": "PALAIS ARTISAN PANTS ALPINE SNOW",
+                "vendor": "Puma",
+                "price": "INR 7,999"
+            },
+            {
+                "name": "BB550 OFF WHITE/BROWN",
+                "vendor": "New Balance",
+                "price": "INR 12,999"
+            },
+            {
+                "name": "X PATTA CHUCK 70 CREAM",
+                "vendor": "Converse",
+                "price": "INR 8,499"
+            },
+            {
+                "name": "X PATTA CHUCK 70 BLACK/GREEN",
+                "vendor": "Converse",
+                "price": "INR 8,499"
+            },
+            {
+                "name": "X PATTA COACHES JACKET RED",
+                "vendor": "Converse",
+                "price": "INR 8,999"
+            },
+            {
+                "name": "X PATTA REVERSIBLE VEST GREEN/BLACK",
+                "vendor": "Converse",
+                "price": "INR 11,499"
+            },
+            {
+                "name": "X PATTA ANNIVERSARY TEE NATURAL IVORY",
+                "vendor": "Converse",
+                "price": "INR 4,499"
+            },
+            {
+                "name": "X PATTA ANNIVERSARY TEE BLACK",
+                "vendor": "Converse",
+                "price": "INR 4,499"
+            },
+            {
+                "name": "AIR JORDAN 4 RETRO \"FEAR\" BLACK/WHITE-ANTHRACITE-BLACK",
+                "vendor": "Jordan",
+                "price": "INR 19,495"
+            },
+            {
+                "name": "AIR JORDAN 3 RETRO BLACK/FIRE RED-CEMENT GREY-SUMMIT WHITE",
+                "vendor": "Jordan",
+                "price": "INR 19,295"
+            },
+            {
+                "name": "WMN'S AIR MAX 1 WHITE/NIGHT MAROON-PHANTOM-BLACK",
+                "vendor": "Nike",
+                "price": "INR 12,795"
+            },
+            {
+                "name": "WMN'S AIR MAX 1 WHITE/ROYAL PULSE-PHANTOM-BLACK",
+                "vendor": "Nike",
+                "price": "INR 12,795"
+            },
+            {
+                "name": "WMN'S AIR MAX 90 LV8 SAIL/BLACK-NIGHT MAROON-PHANTOM",
+                "vendor": "Nike",
+                "price": "INR 12,795"
+            },
+            {
+                "name": "BLAZER LOW PRO CLUB VINTAGE GREEN/COCONUT MILK",
+                "vendor": "Nike",
+                "price": "INR 8,695"
+            },
+            {
+                "name": "SPIZIKE LOW WHITE/PINK OXFORD-ARCHAEO BROWN",
+                "vendor": "Jordan",
+                "price": "INR 14,995"
+            },
+            {
+                "name": "AIR JORDAN 13 WHITE/MIDNIGHT NAVY",
+                "vendor": "Jordan",
+                "price": "INR 19,295"
+            },
+            {
+                "name": "KILLSHOT 2 DARK RUSSET/PHANTOM-GUM MED BROWN-BLACK",
+                "vendor": "Nike",
+                "price": "INR 8,595"
+            },
+            {
+                "name": "NIKE BLAZER LOW '77 VINTAGE SUMMIT WHITE/CACAO WOW-PHOTON DUST",
+                "vendor": "Nike",
+                "price": "INR 7,195"
+            },
+            {
+                "name": "AIR MAX 90 DRIFT ACTION GREEN/BLACK-SUMMIT WHIT",
+                "vendor": "Nike",
+                "price": "INR 14,995"
+            },
+            {
+                "name": "AIR MAX 1 ESSENTIAL WHITE/BLACK-SUMMIT WHITE",
+                "vendor": "Nike",
+                "price": "INR 12,795"
+            },
+            {
+                "name": "AIR MAX 90 LT SMOKE GREY/PHANTOM-ARMORY NAVY",
+                "vendor": "Nike",
+                "price": "INR 10,795"
+            },
+            {
+                "name": "AIR MAX 90 PREMIUM WHITE/KHAKI-RACER BLUE-BLACK",
+                "vendor": "Nike",
+                "price": "INR 12,795"
+            },
+            {
+                "name": "AIR JORDAN 3 \"CEMENT GREY\"",
+                "vendor": "Jordan",
+                "price": "INR 19,295"
+            },
+            {
+                "name": "AIR FORCE 1 '07 WHITE/NEUTRAL OLIVE",
+                "vendor": "Nike",
+                "price": "INR 9,695"
+            },
+            {
+                "name": "AIR FORCE 1 '07 LV8 WHITE/SAFETY ORANGE-WHITE",
+                "vendor": "Nike",
+                "price": "INR 9,695"
+            },
+            {
+                "name": "AIR JORDAN LEGACY 312 LOW WHITE/BLACK-GAME ROYAL-WOLF GREY",
+                "vendor": "Jordan",
+                "price": "INR 12,995"
+            },
+            {
+                "name": "WMN'S AIR FORCE 1 '07 ESSENTIAL SAIL/SAIL-BLACK",
+                "vendor": "Nike",
+                "price": "INR 9,695"
+            },
+            {
+                "name": "AIR FORCE 1 '07 WB FLAX/WHEAT-GUM LIGHT BROWN-BLACK",
+                "vendor": "Nike",
+                "price": "INR 10,995"
+            },
+            {
+                "name": "AIR FORCE 1 '07 BLACK/BLACK/BLACK",
+                "vendor": "Nike",
+                "price": "INR 7,495"
+            },
+            {
+                "name": "WMN'S AIR FORCE 1 SHADOW WHITE",
+                "vendor": "Nike",
+                "price": "INR 8,995"
+            },
+            {
+                "name": "WMN'S AIR FORCE 1 '07 WHITE",
+                "vendor": "Nike",
+                "price": "INR 8,195"
+            },
+            {
+                "name": "WMN'S DUNK LOW PHOTON DUST/VINTAGE GREEN-SAIL-WHITE",
+                "vendor": "Nike",
+                "price": "N/A"
+            },
+            {
+                "name": "DUNK LOW RETRO SE WHEAT/WHEAT-GUM YELLOW-BLACK",
+                "vendor": "Nike",
+                "price": "INR 10,795"
+            },
+            {
+                "name": "WMN'S DUNK LOW WHITE/DUSTY CACTUS",
+                "vendor": "Nike",
+                "price": "INR 8,295"
+            },
+            {
+                "name": "DUNK LOW RETRO WHITE/BRIGHT CACTUS-BLACK",
+                "vendor": "Nike",
+                "price": "INR 8,695"
+            },
+            {
+                "name": "DUNK LOW RETRO WHITE/VIOTECH-WHITE",
+                "vendor": "Nike",
+                "price": "INR 8,695"
+            },
+            {
+                "name": "WMN'S DUNK LOW TWIST BLACK/WHITE-BLACK",
+                "vendor": "Nike",
+                "price": "INR 9,695"
+            },
+            {
+                "name": "WMN'S DUNK LOW BLACK",
+                "vendor": "Nike",
+                "price": "INR 8,295"
+            },
+            {
+                "name": "GEL-KAYANO 14 IRONCLAD/CLOUD GREY",
+                "vendor": "Asics",
+                "price": "INR 14,999"
+            },
+            {
+                "name": "WMN'S 574 BLUE",
+                "vendor": "New Balance",
+                "price": "INR 10,999"
+            },
+            {
+                "name": "327 GREEN",
+                "vendor": "New Balance",
+                "price": "INR 10,999"
+            },
+            {
+                "name": "530 MOONBEAM/SEA SALT",
+                "vendor": "New Balance",
+                "price": "INR 10,999"
+            },
+            {
+                "name": "530 GREEN/WHITE",
+                "vendor": "New Balance",
+                "price": "INR 10,999"
+            },
+            {
+                "name": "1906R BLACK/GREY",
+                "vendor": "New Balance",
+                "price": "INR 15,999"
+            },
+            {
+                "name": "CLASSIC AZ WHITE",
+                "vendor": "Reebok",
+                "price": "INR 7,599"
+            },
+            {
+                "name": "CLASSIC AZ GOLDEN HAZE",
+                "vendor": "Reebok",
+                "price": "INR 7,599"
+            },
+            {
+                "name": "GEL-KAYANO 14 TRUFFLE GREY/OATMEAL",
+                "vendor": "Asics",
+                "price": "INR 14,999"
+            },
+            {
+                "name": "DADDY\u2019S LITTLE GIRL PINK",
+                "vendor": "Jaywalking",
+                "price": "INR 5,999"
+            },
+            {
+                "name": "CAT T-SHIRT BROWN",
+                "vendor": "Jaywalking",
+                "price": "INR 4,500"
+            },
+            {
+                "name": "BLACK PANTHER TATTOO SAGE",
+                "vendor": "Jaywalking",
+                "price": "INR 4,999"
+            },
+            {
+                "name": "BIKER T-SHIRT NAVY",
+                "vendor": "Jaywalking",
+                "price": "INR 5,999"
+            },
+            {
+                "name": "BASICS T-SHIRT RED",
+                "vendor": "Jaywalking",
+                "price": "INR 3,999"
+            },
+            {
+                "name": "STEPPED HEM SWEATPANTS STAINED BLACK",
+                "vendor": "Represent",
+                "price": "INR 16,799"
+            },
+            {
+                "name": "PALAIS ARTISAN PANTS ALPINE SNOW",
+                "vendor": "Puma",
+                "price": "INR 7,999"
+            },
+            {
+                "name": "X PATTA ANNIVERSARY TEE BLACK",
+                "vendor": "Converse",
+                "price": "INR 4,499"
+            },
+            {
+                "name": "X PATTA COACHES JACKET RED",
+                "vendor": "Converse",
+                "price": "INR 8,999"
+            },
+            {
+                "name": "ALBANIA PANTS BLUE",
+                "vendor": "Jaywalking",
+                "price": "INR 14,500"
+            },
+            {
+                "name": "HERMES T-SHIRT PURPLE",
+                "vendor": "Represent",
+                "price": "INR 11,999"
+            },
+            {
+                "name": "HERMES T-SHIRT JET BLACK",
+                "vendor": "Represent",
+                "price": "INR 11,999"
+            },
+            {
+                "name": "GODSPEED T-SHIRT AGED BLACK",
+                "vendor": "Represent",
+                "price": "INR 11,999"
+            },
+            {
+                "name": "ALMOST GODS TEE IN ZARI EMOBROIDERY BLACK",
+                "vendor": "Almost Gods",
+                "price": "INR 6,500"
+            },
+            {
+                "name": "ALMOST GODS RECON TEE OFF WHITE",
+                "vendor": "Almost Gods",
+                "price": "INR 5,500"
+            },
+            {
+                "name": "ALMOST GODS RECON SHIRT WHITE",
+                "vendor": "Almost Gods",
+                "price": "INR 7,500"
+            },
+            {
+                "name": "ALPHA CROSS KNIT SWEATER BLACK",
+                "vendor": "Almost Gods",
+                "price": "INR 9,500"
+            },
+            {
+                "name": "ALMOST GODS RECON HOODIE BLUE",
+                "vendor": "Almost Gods",
+                "price": "INR 10,500"
+            },
+            {
+                "name": "SERIF LOGO FOOTBALL TEE VERDE/WHITE",
+                "vendor": "SPORTY & RICH",
+                "price": "INR 9,199"
+            },
+            {
+                "name": "QUESTION YOUR INNOCENCE HOODIE VINTAGE GREY",
+                "vendor": "Represent",
+                "price": "INR 19,999"
+            },
+            {
+                "name": "MASKING TAPE INITIAL ZIP HOODIE CEDAR",
+                "vendor": "Represent",
+                "price": "INR 20,999"
+            },
+            {
+                "name": "KEYS TO THE CLUB HOODIE JET BLACK",
+                "vendor": "Represent",
+                "price": "INR 18,999"
+            },
+            {
+                "name": "HERMES HOODIE PURPLE",
+                "vendor": "Represent",
+                "price": "INR 18,999"
+            },
+            {
+                "name": "HERMES HOODIE JET BLACK",
+                "vendor": "Represent",
+                "price": "INR 18,999"
+            },
+            {
+                "name": "GODSPEED HOODIE AGED BLACK",
+                "vendor": "Represent",
+                "price": "INR 19,795"
+            },
+            {
+                "name": "ATLAS HOODIE STAINED BLACK",
+                "vendor": "Represent",
+                "price": "INR 19,795"
+            },
+            {
+                "name": "AIR FORCE 1 '07 TRIPLE WHITE",
+                "vendor": "Nike",
+                "price": "INR 7,495"
+            },
+            {
+                "name": "PALERMO LTH PUMA WHITE/GREEN",
+                "vendor": "Puma",
+                "price": "INR 6,999"
+            },
+            {
+                "name": "AIR JORDAN 3 CEMENT GREY",
+                "vendor": "Jordan",
+                "price": "INR 19,295"
+            },
+            {
+                "name": "WMN'S CLASSIC AZ 'WASHED BLACK/CHALK'",
+                "vendor": "Reebok",
+                "price": "INR 7,599"
+            },
+            {
+                "name": "CHUCK TAYLOR ALL STAR CRUISE BEIGE",
+                "vendor": "Converse",
+                "price": "INR 5,499"
+            },
+            {
+                "name": "CHUCK 70 HIGH TOP",
+                "vendor": "Converse",
+                "price": "INR 6,999"
+            },
+            {
+                "name": "AIR JORDAN 4 RETRO \"FEAR\"",
+                "vendor": "Jordan",
+                "price": "INR 19,495"
+            },
+            {
+                "name": "AIR JORDAN 3 RETRO",
+                "vendor": "Jordan",
+                "price": "INR 19,295"
+            },
+            {
+                "name": "WMN'S AIR MAX 1",
+                "vendor": "Nike",
+                "price": "INR 12,795"
+            },
+            {
+                "name": "WMN'S AIR MAX 1",
+                "vendor": "Nike",
+                "price": "INR 12,795"
+            },
+            {
+                "name": "WMN'S AIR MAX 90 LV8",
+                "vendor": "Nike",
+                "price": "INR 12,795"
+            },
+            {
+                "name": "AIR VAPORMAX 2023 FLYKNIT",
+                "vendor": "Nike",
+                "price": "INR 19,295"
+            },
+            {
+                "name": "WMN'S CHUCK TAYLOR ALL STAR",
+                "vendor": "Converse",
+                "price": "INR 8,999"
+            },
+            {
+                "name": "CHUCK 70",
+                "vendor": "Converse",
+                "price": "INR 5,499"
+            },
+            {
+                "name": "CHUCK TAYLOR ALL STAR",
+                "vendor": "Converse",
+                "price": "INR 4,999"
+            },
+            {
+                "name": "CHUCK 70 SEASONAL COLOR",
+                "vendor": "Converse",
+                "price": "INR 6,399"
+            },
+            {
+                "name": "AIR JORDAN 9 RETRO",
+                "vendor": "Jordan",
+                "price": "INR 19,295"
+            },
+            {
+                "name": "CENTENNIAL HI",
+                "vendor": "Y-3",
+                "price": "INR 39,999"
+            },
+            {
+                "name": "WMN'S JAPAN S",
+                "vendor": "Asics",
+                "price": "INR 6,999"
+            },
+            {
+                "name": "WMN'S JAPAN S",
+                "vendor": "Asics",
+                "price": "INR 6,999"
+            },
+            {
+                "name": "STADIUM 90",
+                "vendor": "Jordan",
+                "price": "INR 12,795"
+            },
+            {
+                "name": "WMN'S DUNK LOW",
+                "vendor": "Nike",
+                "price": "INR 9,695"
+            },
+            {
+                "name": "AIR FORCE 1 '07",
+                "vendor": "Nike",
+                "price": "INR 9,695"
+            },
+            {
+                "name": "AIR JORDAN 3 \"CEMENT GREY\"",
+                "vendor": "Jordan",
+                "price": "INR 19,295"
+            },
+            {
+                "name": "CORDUROY SHORTS",
+                "vendor": "Superkicks",
+                "price": "INR 3,499"
+            },
+            {
+                "name": "SIGNATURE SWEATSHIRT",
+                "vendor": "Superkicks",
+                "price": "INR 3,999"
+            },
+            {
+                "name": "CREW SOCKS",
+                "vendor": "Superkicks",
+                "price": "INR 1,199"
+            },
+            {
+                "name": "SIGNATURE WASHED HOODIE",
+                "vendor": "Superkicks",
+                "price": "INR 4,999"
+            },
+            {
+                "name": "SIGNATURE SWEATPANT",
+                "vendor": "Superkicks",
+                "price": "INR 3,999"
+            },
+            {
+                "name": "SIGNATURE FADE HOODIE",
+                "vendor": "Superkicks",
+                "price": "INR 4,999"
+            },
+            {
+                "name": "DREAM OF THE ORIENT LINEN SHIRT",
+                "vendor": "Almost Gods",
+                "price": "INR 10,500"
+            },
+            {
+                "name": "ALCHEMICAL SYMBOL SHIRT",
+                "vendor": "Almost Gods",
+                "price": "INR 8,500"
+            },
+            {
+                "name": "ALMOST GODS RECON SHIRT",
+                "vendor": "Almost Gods",
+                "price": "INR 7,500"
+            },
+            {
+                "name": "ALMOST GODS ARCANA JACQUARD PATCHED TEE",
+                "vendor": "Almost Gods",
+                "price": "INR 7,500"
+            }
+        ],
+        "return_refund_policy": "Default return and refund policy not found.",
+        "payment_mode": [
+            "Visa",
+            "Mastercard",
+            "JCB",
+            "Discover",
+            "American Express",
+            "RuPay",
+            "Diners Club",
+            "Amazon",
+            "Airtel Money",
+            "Freecharge",
+            "Ola Money",
+            "Paytm",
+            "MobiKwik"
+        ],
+        "contact_information": {
+            "contact_page": "https://www.superkicks.in/pages/contact",
+            "social_media": {
+                "facebook": "https://www.facebook.com/SuperkicksIndia/",
+                "instagram": "https://www.instagram.com/superkicksindia/"
+            }
+        }
+    },
+    "error": ""
+}
