@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import subprocess
 import os
+import io
 from fpdf import FPDF
 
 # Apply custom CSS for styling
@@ -24,15 +25,19 @@ def analyze_merchant_url(url):
     except Exception as e:
         return f"Error: {str(e)}"
 
-def save_markdown_as_pdf(markdown_text, filename="output.pdf"):
-    """Convert Markdown text to PDF and allow download."""
+def save_markdown_as_pdf(markdown_text):
+    """Convert Markdown text to PDF using BytesIO for Streamlit."""
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 10, markdown_text)
-    pdf.output(filename)
-    return filename
+    
+    # Use BytesIO to store the PDF in memory
+    pdf_buffer = io.BytesIO()
+    pdf.output(pdf_buffer, 'F')
+    pdf_buffer.seek(0)
+    return pdf_buffer
 
 # Streamlit UI
 st.set_page_config(page_title="Merchant URL Analyzer", page_icon="🔍", layout="centered")
@@ -52,8 +57,7 @@ if st.button("Analyze URL", use_container_width=True):
         st.code(analysis_result, language="markdown")
 
         # Add Download as PDF button
-        pdf_filename = save_markdown_as_pdf(analysis_result)
-        with open(pdf_filename, "rb") as file:
-            st.download_button(label="📥 Download as PDF", data=file, file_name="analysis_result.pdf", mime="application/pdf")
+        pdf_buffer = save_markdown_as_pdf(analysis_result)
+        st.download_button(label="📥 Download as PDF", data=pdf_buffer, file_name="analysis_result.pdf", mime="application/pdf")
     else:
         st.warning("Please enter a valid URL before analyzing!")
