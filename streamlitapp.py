@@ -1,6 +1,8 @@
 import streamlit as st
 import requests
 import subprocess
+import os
+from fpdf import FPDF
 
 # Apply custom CSS for styling
 st.markdown(
@@ -17,10 +19,20 @@ st.markdown(
 def analyze_merchant_url(url):
     """Call external script to analyze merchant URL."""
     try:
-        result = subprocess.run(["python", "analyze_url.py", url], capture_output=True, text=True)
+        result = subprocess.run(["python", "merchant_web_intelligence.py", url], capture_output=True, text=True)
         return result.stdout if result.returncode == 0 else "Error analyzing URL"
     except Exception as e:
         return f"Error: {str(e)}"
+
+def save_markdown_as_pdf(markdown_text, filename="output.pdf"):
+    """Convert Markdown text to PDF and allow download."""
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, markdown_text)
+    pdf.output(filename)
+    return filename
 
 # Streamlit UI
 st.set_page_config(page_title="Merchant URL Analyzer", page_icon="🔍", layout="centered")
@@ -38,5 +50,10 @@ if st.button("Analyze URL", use_container_width=True):
         with st.spinner("Analyzing URL..."):
             analysis_result = analyze_merchant_url(url_input)
         st.code(analysis_result, language="markdown")
+
+        # Add Download as PDF button
+        pdf_filename = save_markdown_as_pdf(analysis_result)
+        with open(pdf_filename, "rb") as file:
+            st.download_button(label="📥 Download as PDF", data=file, file_name="analysis_result.pdf", mime="application/pdf")
     else:
         st.warning("Please enter a valid URL before analyzing!")
