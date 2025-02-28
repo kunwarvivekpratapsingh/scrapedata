@@ -1,0 +1,9 @@
+Example Tech Stack for Large ML Pipeline
+Component	             Tools
+Ingestion	          Kafka, Airflow, AWS Glue
+Processing	        Spark, Databricks, Flink
+Storage	            S3, Snowflake, Postgres
+Feature             Store	Feast, Tecton
+Model Training	    SageMaker, MLflow
+Model Deployment	  FastAPI, Kubernetes
+Monitoring	        Prometheus, Grafana
