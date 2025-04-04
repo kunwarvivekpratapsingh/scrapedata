@@ -1,0 +1,23 @@
+{
+  "segments": [
+    {
+      "name": "PowerUsers",
+      "conditions": {
+        "all": [
+          { "field": "login_count", "operator": ">", "value": 10 },
+          {
+            "any": [
+              { "field": "subscription_level", "operator": "==", "value": "premium" },
+              { "field": "spend", "operator": ">", "value": 100 }
+            ]
+          },
+          {
+            "not": {
+              "field": "is_banned", "operator": "==", "value": true
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
