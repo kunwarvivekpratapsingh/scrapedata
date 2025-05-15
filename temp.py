@@ -70,3 +70,87 @@ class DummyEpisodicStore:
         super().__init__(*args, **kwargs)
         self.semantic_store = DummySemanticStore()
         self.episodic_store = DummyEpisodicStore()
+
+"""
+You are a supervisor tasked with routing a conversation to correct assistant: visualizer, retriever, coder, bigdata.       
+Think carefully to whom pass the question. Take into consideration whole context.
+
+Formulate task for each assistant taking into account if this is new request or additional information to previous question.
+Do not skip any information, do not change the meaning of words.
+
+Use QUESTION route to ask human a question. Do it always when you got response from ask_human tool.
+Do not use QUESTION route to ask human for missing results from assistants.
+
+Route to FINISH when you can answer the question based on results from assistants. Answer needs to be HTML compilant.
+
+If assistant was not able to acomplish task and you cannot proceed further - answer with actual status.
+You cannot except from Human that he will provide an answer to task assigned to assistant.
+
+Responsibilities of assistants:
+* retriever - his goal is to gather information which datasets should be used to get data and their schema
+* coder - based on information from retriever he generates the code to be executed
+* bigdata - an assistant responsible for executing code from coder and saving results to directory
+* visualizer - responsible for presenting data (generate plot, table, save to csv) based on results from bigdata assistant
+
+You cannot route to the same assistant twice in a row without human interaction between them.
+
+Results from assistants that you can use to provide final answer:
+* retriever
+{datasets}
+
+* bigdata output path: {result_output_path}
+
+---
+
+Below is memory from previous turns to help you decide:
+
+--- SEMANTIC MEMORY ---
+{{retrieved_memory}}
+
+--- EPISODIC MEMORY ---
+{{episodic_trace}}
+"""
+def __call__(self, state) -> Command:
+    session_id = state["session_id"]
+    user_id = state.get("user_id", "anonymous")
+    question = state["user_question"]
+
+    # 🧠 Retrieve semantic + episodic memory (from dummy or real store)
+    sem_mem = self.semantic_store.retrieve(session_id, question)
+    epi_mem = self.episodic_store.get_last_n(session_id)
+
+    semantic_block = "\n".join(sem_mem) if sem_mem else "None"
+    episodic_trace = "\n".join(f"{e['role']}: {e['message']}" for e in epi_mem) if epi_mem else "None"
+
+    # ✅ Store into state for downstream agents
+    state["retrieved_memory"] = sem_mem
+    state["episodic_trace"] = episodic_trace
+
+    # ✅ Build final system prompt using your class docstring
+    memory_prompt = self.__class__.__doc__ \
+        .replace("{{retrieved_memory}}", semantic_block) \
+        .replace("{{episodic_trace}}", episodic_trace)
+
+    # ✅ Inject system prompt into message stream
+    state["messages"] = [{"role": "system", "content": memory_prompt}]
+
+    # 🧠 Continue with your original behavior (routes & LLM call)
+    response = super().__call__(state)
+    goto = response.next
+
+    # 🧠 Save current user question to both memories
+    self.semantic_store.save(session_id, user_id, question)
+    self.episodic_store.save_event(session_id, "user", question)
+
+    # 🧠 Save LLM result to episodic memory
+    if goto == "FINISH":
+        self.episodic_store.save_event(session_id, "metaagent", response.answer)
+        content = response.answer
+    elif goto == "QUESTION":
+        self.episodic_store.save_event(session_id, "metaagent", response.question)
+        content = response.question
+    else:
+        self.episodic_store.save_event(session_id, "metaagent", response.task)
+        content = response.task
+
+    return Command(goto=goto, update={"messages": self._create_ai_message(content)})
