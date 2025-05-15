@@ -42,3 +42,26 @@ def __call__(self, state) -> Command:
         content = response.task
 
     return Command(goto=goto, update={"messages": self._create_ai_message(content)})
+
+# dummy_memory_store.py
+
+class DummySemanticStore:
+    def retrieve(self, session_id, query, top_k=5):
+        return [
+            "User previously asked about sales by category.",
+            "A chart was generated showing revenue trends.",
+        ]
+
+    def save(self, session_id, user_id, message):
+        print(f"[DummySemanticStore] Saved semantic: ({session_id}, {message})")
+
+
+class DummyEpisodicStore:
+    def get_last_n(self, session_id, role=None, limit=5):
+        return [
+            {"role": "user", "message": "Show revenue breakdown by region."},
+            {"role": "metaagent", "message": "Routing to bigdata agent."},
+        ]
+
+    def save_event(self, session_id, role, message):
+        print(f"[DummyEpisodicStore] Saved episode: ({session_id}, {role}, {message})")
