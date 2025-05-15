@@ -65,3 +65,8 @@ class DummyEpisodicStore:
 
     def save_event(self, session_id, role, message):
         print(f"[DummyEpisodicStore] Saved episode: ({session_id}, {role}, {message})")
+
+ def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.semantic_store = DummySemanticStore()
+        self.episodic_store = DummyEpisodicStore()
