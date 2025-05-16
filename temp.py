@@ -220,3 +220,22 @@ class EDAMemoryStore:
             results = [row[0] for row in result.fetchall() if row[1] <= (1 - min_score)]
             return results
 POSTGRES_URL=postgresql+psycopg2://eda_user:your_password@<your_host_or_ip>:5432/eda_memory_db
+
+
+# test_connection.py
+
+import os
+from sqlalchemy import create_engine
+
+# Set this only for quick testing
+os.environ["POSTGRES_URL"] = "postgresql+psycopg2://eda_user:your_password@your_host:5432/eda_memory_db"
+
+db_url = os.getenv("POSTGRES_URL")
+engine = create_engine(db_url)
+
+try:
+    with engine.connect() as conn:
+        result = conn.execute("SELECT * FROM eda_memory LIMIT 1;")
+        print("✅ Connected! Sample data:", result.fetchall())
+except Exception as e:
+    print("❌ Connection failed:", e)
