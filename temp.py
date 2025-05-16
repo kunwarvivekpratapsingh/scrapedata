@@ -170,3 +170,52 @@ WITH (lists = 100);
 
 -- Optional: Index to query by session quickly
 CREATE INDEX idx_eda_memory_session_id ON eda_memory (session_id);
+
+
+# eda_memory_store.py
+from sqlalchemy import create_engine, Column, String, Integer, Text, TIMESTAMP
+from sqlalchemy.orm import declarative_base, sessionmaker
+from pgvector.sqlalchemy import Vector
+from datetime import datetime
+from langchain.embeddings import OpenAIEmbeddings
+
+Base = declarative_base()
+
+class EDAMemory(Base):
+    __tablename__ = "eda_memory"
+
+    id = Column(Integer, primary_key=True)
+    session_id = Column(String)
+    user_id = Column(String)
+    message = Column(Text)
+    embedding = Column(Vector(1536))
+    timestamp = Column(TIMESTAMP, default=datetime.utcnow)
+
+class EDAMemoryStore:
+    def __init__(self, db_url):
+        self.engine = create_engine(db_url)
+        self.Session = sessionmaker(bind=self.engine)
+        self.embedder = OpenAIEmbeddings()
+
+    def save(self, session_id, user_id, message):
+        embedding = self.embedder.embed_query(message)
+        with self.Session() as session:
+            entry = EDAMemory(session_id=session_id, user_id=user_id, message=message, embedding=embedding)
+            session.add(entry)
+            session.commit()
+
+    def retrieve(self, session_id, message, top_k=5, min_score=0.75):
+        query_embedding = self.embedder.embed_query(message)
+        with self.engine.connect() as conn:
+            result = conn.execute(
+                f"""
+                SELECT message, embedding <-> :query AS score
+                FROM eda_memory
+                WHERE session_id = :sid
+                ORDER BY score ASC
+                LIMIT :limit
+                """,
+                {"query": query_embedding, "sid": session_id, "limit": top_k}
+            )
+            results = [row[0] for row in result.fetchall() if row[1] <= (1 - min_score)]
+            return results
