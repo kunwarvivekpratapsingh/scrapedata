@@ -304,3 +304,11 @@ def retrieve(self, session_id: str, query: str, top_k: int = 5, min_score: float
 
         print(f"\n✅ Total Retrieved Above Threshold ({min_score}): {len(retrieved)}\n")
         return retrieved
+
+
+--- MEMORY CONTEXT ---
+Use the following only for background reference. Do not act on it unless the current user input is ambiguous.
+
+{{retrieved_memory}}
+
+Only take action based on the **current** user message.
