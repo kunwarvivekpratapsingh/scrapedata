@@ -268,3 +268,39 @@ def retrieve(self, session_id: str, query: str, top_k: int = 5, min_score: float
                 for row in result.fetchall()
                 if row[1] is not None and row[1] <= (1 - min_score)
             ]
+
+
+
+def retrieve(self, session_id: str, query: str, top_k: int = 5, min_score: float = 0.75):
+    query_embedding = self.embedder.embed_query(query)
+    formatted_vector = "[" + ",".join(map(str, query_embedding)) + "]"
+
+    with self.engine.connect() as conn:
+        result = conn.execute(
+            text("""
+                SELECT message, embedding <-> :query_embedding AS score
+                FROM eda_memory
+                WHERE session_id = :session_id
+                ORDER BY score ASC
+                LIMIT :limit
+            """),
+            {
+                "query_embedding": formatted_vector,
+                "session_id": session_id,
+                "limit": top_k
+            }
+        )
+
+        matches = result.fetchall()
+        print(f"🔍 Memory Retrieval for Query: {query}")
+        print(f"📌 Top {top_k} results for session {session_id}:\n")
+        retrieved = []
+        for i, row in enumerate(matches):
+            message, score = row
+            similarity = 1 - score if score is not None else 0
+            print(f"{i+1}. 🧠 Message: {message}\n   🔢 Similarity: {similarity:.4f}")
+            if similarity >= min_score:
+                retrieved.append(message)
+
+        print(f"\n✅ Total Retrieved Above Threshold ({min_score}): {len(retrieved)}\n")
+        return retrieved
