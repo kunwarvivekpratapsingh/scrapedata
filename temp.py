@@ -154,3 +154,19 @@ def __call__(self, state) -> Command:
         content = response.task
 
     return Command(goto=goto, update={"messages": self._create_ai_message(content)})
+-- Create the eda_memory table
+CREATE TABLE eda_memory (
+    id SERIAL PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    message TEXT NOT NULL,
+    embedding VECTOR(1536),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Optional: Create an index on the vector column for fast similarity search
+CREATE INDEX idx_eda_memory_embedding ON eda_memory USING ivfflat (embedding vector_cosine_ops)
+WITH (lists = 100);
+
+-- Optional: Index to query by session quickly
+CREATE INDEX idx_eda_memory_session_id ON eda_memory (session_id);
