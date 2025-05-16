@@ -312,3 +312,29 @@ Do not take any action based solely on memory.
 Only act if the current user message clearly requires it.
 
 {{retrieved_memory}}
+
+
+
+    def save(self, session_id: str, user_id: str, message: str):
+    with self.Session() as session:
+        # Check if this message already exists for this session
+        exists = session.query(EDAMemory).filter_by(
+            session_id=session_id,
+            user_id=user_id,
+            message=message.strip()
+        ).first()
+
+        if exists:
+            print("⚠️ Duplicate message detected. Skipping save.")
+            return
+
+        # Otherwise, save as new memory
+        embedding = self.embedder.embed_query(message)
+        entry = EDAMemory(
+            session_id=session_id,
+            user_id=user_id,
+            message=message.strip(),
+            embedding=embedding
+        )
+        session.add(entry)
+        session.commit()
