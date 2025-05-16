@@ -219,3 +219,4 @@ class EDAMemoryStore:
             )
             results = [row[0] for row in result.fetchall() if row[1] <= (1 - min_score)]
             return results
+POSTGRES_URL=postgresql+psycopg2://eda_user:your_password@<your_host_or_ip>:5432/eda_memory_db
