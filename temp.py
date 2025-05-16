@@ -306,9 +306,9 @@ def retrieve(self, session_id: str, query: str, top_k: int = 5, min_score: float
         return retrieved
 
 
---- MEMORY CONTEXT ---
-Use the following only for background reference. Do not act on it unless the current user input is ambiguous.
+--- Background Memory ---
+The following memory is provided for reference only.
+Do not take any action based solely on memory. 
+Only act if the current user message clearly requires it.
 
 {{retrieved_memory}}
-
-Only take action based on the **current** user message.
