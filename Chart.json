@@ -1,0 +1,143 @@
+{
+  "diagram": {
+    "id": "memory_agent_architecture",
+    "name": "Memory Agent Architecture",
+    "cells": [
+      {
+        "id": "0",
+        "value": "",
+        "style": "group",
+        "vertex": "1",
+        "connectable": "0",
+        "geometry": {
+          "x": 0,
+          "y": 0,
+          "width": 1000,
+          "height": 1000,
+          "relative": "0"
+        },
+        "mxObjectId": "0"
+      },
+      {
+        "id": "1",
+        "value": "[User]",
+        "vertex": "1",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "geometry": {
+          "x": 20,
+          "y": 40,
+          "width": 80,
+          "height": 40
+        }
+      },
+      {
+        "id": "2",
+        "value": "[UI]",
+        "vertex": "1",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "geometry": {
+          "x": 120,
+          "y": 40,
+          "width": 80,
+          "height": 40
+        }
+      },
+      {
+        "id": "3",
+        "value": "[Meta Agent]",
+        "vertex": "1",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "geometry": {
+          "x": 220,
+          "y": 40,
+          "width": 100,
+          "height": 40
+        }
+      },
+      {
+        "id": "4",
+        "value": "[Event Bus]",
+        "vertex": "1",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "geometry": {
+          "x": 340,
+          "y": 40,
+          "width": 100,
+          "height": 40
+        }
+      },
+      {
+        "id": "5",
+        "value": "[Retriever]",
+        "vertex": "1",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "geometry": {
+          "x": 120,
+          "y": 120,
+          "width": 100,
+          "height": 40
+        }
+      },
+      {
+        "id": "6",
+        "value": "[Coder]",
+        "vertex": "1",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "geometry": {
+          "x": 240,
+          "y": 120,
+          "width": 80,
+          "height": 40
+        }
+      },
+      {
+        "id": "7",
+        "value": "[Big Data]",
+        "vertex": "1",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "geometry": {
+          "x": 340,
+          "y": 120,
+          "width": 100,
+          "height": 40
+        }
+      },
+      {
+        "id": "8",
+        "value": "[Visualizer]",
+        "vertex": "1",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "geometry": {
+          "x": 460,
+          "y": 120,
+          "width": 100,
+          "height": 40
+        }
+      },
+      {
+        "id": "9",
+        "value": "[Memory Agent]",
+        "vertex": "1",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "geometry": {
+          "x": 280,
+          "y": 200,
+          "width": 120,
+          "height": 40
+        }
+      },
+      {
+        "id": "10",
+        "value": "[Memory Service]",
+        "vertex": "1",
+        "style": "rounded=1;whiteSpace=wrap;html=1;",
+        "geometry": {
+          "x": 420,
+          "y": 200,
+          "width": 120,
+          "height": 40
+        }
+      }
+    ]
+  }
+}
