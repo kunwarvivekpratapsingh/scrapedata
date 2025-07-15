@@ -1,0 +1,104 @@
+graph TB
+    %% User Interface Layer
+    subgraph "User Interface Layer"
+        UI[Web UI/Dashboard]
+        CB[Chatbot Interface]
+        UP[Dataset Upload Portal]
+    end
+
+    %% API Gateway & Orchestration
+    subgraph "API Gateway & Orchestration"
+        AG[API Gateway]
+        ORC[Orchestration Engine]
+        AUTH[Authentication Service]
+    end
+
+    %% AI Agent Layer
+    subgraph "AI Agent Layer"
+        subgraph "Data Processing Agents"
+            DOA[Data Onboarding Agent]
+            AHG[Automated Hypothesis & Insight Generator Agent]
+        end
+        
+        subgraph "Query Processing Agents"
+            AEDA[Automated EDA Agent]
+            GEDA[Gen AI EDA Agent]
+            SML[Swarm ML Agent]
+        end
+    end
+
+    %% Processing Pipeline
+    subgraph "Processing Pipeline"
+        PP[Manual EDA Pipeline]
+        PF[Python EDA Functions]
+        DG[Document Generator]
+    end
+
+    %% Data Storage Layer
+    subgraph "Data Storage Layer"
+        DS[Dataset Storage]
+        DB[(Database)]
+        VDB[(Vector Database)]
+        CACHE[Cache Layer]
+    end
+
+    %% External Services
+    subgraph "External Services"
+        RAG[RAG Search Engine]
+        ML[ML Model Registry]
+        MON[Monitoring & Logging]
+    end
+
+    %% User Interactions
+    UP --> AG
+    CB --> AG
+    UI --> AG
+
+    %% API Gateway Flow
+    AG --> AUTH
+    AG --> ORC
+    ORC --> DOA
+
+    %% Data Onboarding Flow
+    DOA --> DS
+    DOA --> PP
+    DOA --> DB
+    PP --> PF
+    PF --> DG
+    DG --> DB
+
+    %% Agent Communication
+    DOA -.->|API Trigger| AHG
+    AHG --> DB
+    AHG --> UI
+
+    %% Query Processing Flow
+    CB --> AEDA
+    AEDA --> RAG
+    RAG --> VDB
+    AEDA -.->|Fallback| GEDA
+    GEDA --> ML
+    GEDA --> DB
+
+    %% Data Flow
+    DB --> UI
+    DS --> DOA
+    VDB --> RAG
+    
+    %% Monitoring
+    MON --> DOA
+    MON --> AHG
+    MON --> AEDA
+    MON --> GEDA
+    MON --> SML
+
+    %% Styling
+    classDef agent fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef storage fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef interface fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef service fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+
+    class DOA,AHG,AEDA,GEDA,SML agent
+    class DS,DB,VDB,CACHE storage
+    class UI,CB,UP interface
+    class AG,ORC,AUTH,RAG,ML,MON service
