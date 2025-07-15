@@ -1,0 +1,56 @@
+sequenceDiagram
+    participant User
+    participant UI as Web UI
+    participant API as API Gateway
+    participant DOA as Data Onboarding Agent
+    participant Storage as Dataset Storage
+    participant Pipeline as EDA Pipeline
+    participant DB as Database
+    participant AHG as Hypothesis Generator Agent
+    participant CB as Chatbot
+    participant AEDA as Automated EDA Agent
+    participant RAG as RAG Search
+    participant GEDA as Gen AI EDA Agent
+    participant ML as Code Execution Engine
+
+    Note over User, ML: Phase 1: Dataset Onboarding
+    User->>UI: Upload Dataset
+    UI->>API: POST /upload-dataset
+    API->>DOA: Process Dataset
+    DOA->>Storage: Store Dataset
+    DOA->>DOA: Score Dataset & Compute Metrics
+    DOA->>Pipeline: Trigger Manual EDA
+    Pipeline->>Pipeline: Execute Python EDA Functions
+    Pipeline->>DB: Store EDA Documents
+    DOA->>UI: Return Dataset Metrics
+    DOA->>API: Trigger Hypothesis Generation
+    API->>AHG: Generate Hypothesis & Insights
+    AHG->>AHG: Generate Top 10 Hypotheses
+    AHG->>AHG: Generate Insights from Hypotheses
+    AHG->>DB: Store Insights
+    AHG->>UI: Update UI with Insights
+    UI->>User: Display Dataset Metrics & Insights
+
+    Note over User, ML: Phase 2: Interactive Query Processing
+    User->>CB: Ask Question
+    CB->>API: POST /query
+    API->>AEDA: Process Query
+    AEDA->>RAG: Search EDA Documents
+    RAG->>DB: Retrieve Relevant Documents
+    DB->>RAG: Return Documents
+    RAG->>AEDA: Return Search Results
+    
+    alt AEDA Can Answer
+        AEDA->>CB: Return Answer
+        CB->>User: Display Answer
+    else AEDA Cannot Answer
+        AEDA->>GEDA: Fallback to Gen AI EDA
+        GEDA->>Storage: Identify Right Dataset
+        Storage->>GEDA: Return Dataset Info
+        GEDA->>GEDA: Generate Python Code
+        GEDA->>GEDA: Execute Generated Code
+        GEDA->>GEDA: Create Visualizations
+        GEDA->>DB: Store Query Results & Visualizations
+        GEDA->>CB: Return Code + Visualizations + Analysis
+        CB->>User: Display Complete Response
+    end
