@@ -28,6 +28,15 @@ from typing import Any
 # Allow running from repo root without install
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+# Load .env file from project root (if it exists) before anything else reads env vars.
+# This means OPENAI_API_KEY in .env is picked up by LangChain/OpenAI automatically.
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).parent.parent / ".env"
+    load_dotenv(dotenv_path=_env_path, override=False)  # override=False: real env vars win
+except ImportError:
+    pass  # python-dotenv not installed — fall back to os.environ only
+
 from eval_dag.graphs.critic_loop import critic_loop
 from eval_dag.state.models import DifficultyLevel, Question
 

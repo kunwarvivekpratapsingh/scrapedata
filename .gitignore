@@ -23,9 +23,7 @@ dataset/data.json
 archive*.zip
 *.zip
 
-# Generated outputs (can be regenerated)
-eval_results.json
-eval_report.html
+
 
 # IDE / OS
 .vscode/
@@ -35,3 +33,7 @@ Thumbs.db
 
 # Claude Code session files
 .claude/
+
+# Environment variables — never commit the real .env
+.env
+# .env.example IS committed (it has no real secrets)

@@ -4,7 +4,7 @@ Usage:
     py scripts/run_eval.py --dataset path/to/data.json [--metadata path/to/meta.json]
     py scripts/run_eval.py --dataset path/to/data.json --output results.json
 
-Requires OPENAI_API_KEY in the environment.
+Requires OPENAI_API_KEY — set it in a .env file at the project root or in the environment.
 """
 
 from __future__ import annotations
@@ -18,6 +18,15 @@ from pathlib import Path
 
 # Allow running from repo root without install
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+# Load .env file from project root (if it exists) before anything else reads env vars.
+# This means OPENAI_API_KEY in .env is picked up by LangChain/OpenAI automatically.
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).parent.parent / ".env"
+    load_dotenv(dotenv_path=_env_path, override=False)  # override=False: real env vars win
+except ImportError:
+    pass  # python-dotenv not installed — fall back to os.environ only
 
 
 def setup_logging(verbose: bool) -> None:
