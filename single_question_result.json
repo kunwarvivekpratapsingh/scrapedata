@@ -1,0 +1,431 @@
+{
+  "question": {
+    "id": "q_hard_02",
+    "text": "Using the transactions list, perform the following steps in order: STEP 1 - group transactions by (gender, category) and count total transactions and fraud transactions for each (gender, category) pair; STEP 2 - compute the fraud rate for each (gender, category) pair as fraud_count divided by total_count; STEP 3 - using the counts from STEP 1, compute the total transaction count per gender (sum of counts across all categories for that gender) and the number of distinct categories per gender, then compute the per-gender average transaction count as total_for_gender divided by num_categories_for_gender; STEP 4 - filter the (gender, category) pairs from STEP 1 keeping only those where the count is strictly greater than the gender average from STEP 3; STEP 5 - for each gender, find the category with the highest fraud rate among the filtered pairs from STEP 4; STEP 6 - build a list of [gender, category, round(fraud_rate, 6)] for each gender's top category and sort it by fraud_rate descending. Return the final sorted list.",
+    "difficulty_rank": 10,
+    "difficulty_level": "hard",
+    "reasoning": "Requires 6+ sequential steps that MUST be ordered correctly: (1) group transactions by (gender, category) - this MUST come first to produce raw counts, (2) compute per-(gender, category) fraud rate from the grouped counts, (3) compute per-gender average from the same grouped counts (total_count / num_distinct_categories), (4) filter pairs where count > gender average - depends on both step 1 counts and step 3 averages, (5) argmax fraud rate per gender from filtered set - depends on step 2 rates and step 4 filter, (6) format and sort result descending by fraud_rate. The critical trap: computing averages BEFORE grouping raw data will give wrong results. Tests nested grouping, sequential multi-step aggregation, per-group threshold filtering, argmax within a filtered group, and multi-key sorting.",
+    "relevant_data_keys": [
+      "transactions"
+    ]
+  },
+  "ground_truth": [
+    [
+      "M",
+      "shopping_net",
+      0.536885
+    ],
+    [
+      "F",
+      "grocery_pos",
+      0.365517
+    ]
+  ],
+  "iterations_used": 1,
+  "is_approved": true,
+  "correct": true,
+  "execution_result": {
+    "question_id": "q_hard_02",
+    "success": true,
+    "final_answer": [
+      [
+        "M",
+        "shopping_net",
+        0.536885
+      ],
+      [
+        "F",
+        "grocery_pos",
+        0.365517
+      ]
+    ],
+    "node_outputs": {
+      "step_1": {
+        "('F', 'health_fitness')": {
+          "total_count": 149,
+          "fraud_count": 9
+        },
+        "('M', 'grocery_pos')": {
+          "total_count": 308,
+          "fraud_count": 130
+        },
+        "('F', 'personal_care')": {
+          "total_count": 211,
+          "fraud_count": 24
+        },
+        "('M', 'personal_care')": {
+          "total_count": 112,
+          "fraud_count": 7
+        },
+        "('F', 'shopping_pos')": {
+          "total_count": 259,
+          "fraud_count": 61
+        },
+        "('M', 'shopping_net')": {
+          "total_count": 244,
+          "fraud_count": 131
+        },
+        "('M', 'shopping_pos')": {
+          "total_count": 227,
+          "fraud_count": 50
+        },
+        "('M', 'kids_pets')": {
+          "total_count": 164,
+          "fraud_count": 7
+        },
+        "('F', 'shopping_net')": {
+          "total_count": 282,
+          "fraud_count": 84
+        },
+        "('F', 'gas_transport')": {
+          "total_count": 224,
+          "fraud_count": 30
+        },
+        "('F', 'food_dining')": {
+          "total_count": 170,
+          "fraud_count": 15
+        },
+        "('M', 'gas_transport')": {
+          "total_count": 224,
+          "fraud_count": 43
+        },
+        "('M', 'health_fitness')": {
+          "total_count": 125,
+          "fraud_count": 4
+        },
+        "('M', 'travel')": {
+          "total_count": 69,
+          "fraud_count": 9
+        },
+        "('M', 'entertainment')": {
+          "total_count": 158,
+          "fraud_count": 15
+        },
+        "('F', 'kids_pets')": {
+          "total_count": 230,
+          "fraud_count": 31
+        },
+        "('M', 'home')": {
+          "total_count": 214,
+          "fraud_count": 1
+        },
+        "('M', 'misc_pos')": {
+          "total_count": 113,
+          "fraud_count": 13
+        },
+        "('F', 'travel')": {
+          "total_count": 88,
+          "fraud_count": 12
+        },
+        "('F', 'home')": {
+          "total_count": 232,
+          "fraud_count": 25
+        },
+        "('F', 'entertainment')": {
+          "total_count": 145,
+          "fraud_count": 18
+        },
+        "('M', 'misc_net')": {
+          "total_count": 157,
+          "fraud_count": 77
+        },
+        "('F', 'misc_pos')": {
+          "total_count": 145,
+          "fraud_count": 10
+        },
+        "('M', 'food_dining')": {
+          "total_count": 139,
+          "fraud_count": 7
+        },
+        "('F', 'grocery_net')": {
+          "total_count": 67,
+          "fraud_count": 8
+        },
+        "('F', 'grocery_pos')": {
+          "total_count": 290,
+          "fraud_count": 106
+        },
+        "('F', 'misc_net')": {
+          "total_count": 181,
+          "fraud_count": 63
+        },
+        "('M', 'grocery_net')": {
+          "total_count": 73,
+          "fraud_count": 10
+        }
+      },
+      "step_2": {
+        "('F', 'health_fitness')": 0.06040268456375839,
+        "('M', 'grocery_pos')": 0.42207792207792205,
+        "('F', 'personal_care')": 0.11374407582938388,
+        "('M', 'personal_care')": 0.0625,
+        "('F', 'shopping_pos')": 0.23552123552123552,
+        "('M', 'shopping_net')": 0.5368852459016393,
+        "('M', 'shopping_pos')": 0.22026431718061673,
+        "('M', 'kids_pets')": 0.042682926829268296,
+        "('F', 'shopping_net')": 0.2978723404255319,
+        "('F', 'gas_transport')": 0.13392857142857142,
+        "('F', 'food_dining')": 0.08823529411764706,
+        "('M', 'gas_transport')": 0.19196428571428573,
+        "('M', 'health_fitness')": 0.032,
+        "('M', 'travel')": 0.13043478260869565,
+        "('M', 'entertainment')": 0.0949367088607595,
+        "('F', 'kids_pets')": 0.13478260869565217,
+        "('M', 'home')": 0.004672897196261682,
+        "('M', 'misc_pos')": 0.11504424778761062,
+        "('F', 'travel')": 0.13636363636363635,
+        "('F', 'home')": 0.10775862068965517,
+        "('F', 'entertainment')": 0.12413793103448276,
+        "('M', 'misc_net')": 0.49044585987261147,
+        "('F', 'misc_pos')": 0.06896551724137931,
+        "('M', 'food_dining')": 0.050359712230215826,
+        "('F', 'grocery_net')": 0.11940298507462686,
+        "('F', 'grocery_pos')": 0.36551724137931035,
+        "('F', 'misc_net')": 0.34806629834254144,
+        "('M', 'grocery_net')": 0.136986301369863
+      },
+      "step_3": {
+        "F": 190.92857142857142,
+        "M": 166.21428571428572
+      },
+      "step_4": {
+        "('M', 'grocery_pos')": {
+          "total_count": 308,
+          "fraud_count": 130
+        },
+        "('F', 'personal_care')": {
+          "total_count": 211,
+          "fraud_count": 24
+        },
+        "('F', 'shopping_pos')": {
+          "total_count": 259,
+          "fraud_count": 61
+        },
+        "('M', 'shopping_net')": {
+          "total_count": 244,
+          "fraud_count": 131
+        },
+        "('M', 'shopping_pos')": {
+          "total_count": 227,
+          "fraud_count": 50
+        },
+        "('F', 'shopping_net')": {
+          "total_count": 282,
+          "fraud_count": 84
+        },
+        "('F', 'gas_transport')": {
+          "total_count": 224,
+          "fraud_count": 30
+        },
+        "('M', 'gas_transport')": {
+          "total_count": 224,
+          "fraud_count": 43
+        },
+        "('F', 'kids_pets')": {
+          "total_count": 230,
+          "fraud_count": 31
+        },
+        "('M', 'home')": {
+          "total_count": 214,
+          "fraud_count": 1
+        },
+        "('F', 'home')": {
+          "total_count": 232,
+          "fraud_count": 25
+        },
+        "('F', 'grocery_pos')": {
+          "total_count": 290,
+          "fraud_count": 106
+        }
+      },
+      "step_5": {
+        "M": [
+          "shopping_net",
+          0.5368852459016393
+        ],
+        "F": [
+          "grocery_pos",
+          0.36551724137931035
+        ]
+      },
+      "step_6": [
+        [
+          "M",
+          "shopping_net",
+          0.536885
+        ],
+        [
+          "F",
+          "grocery_pos",
+          0.365517
+        ]
+      ]
+    },
+    "error": null,
+    "execution_time_ms": 0.0
+  },
+  "dag_history": [
+    {
+      "iteration": 1,
+      "dag": {
+        "question_id": "q_hard_02",
+        "nodes": [
+          {
+            "node_id": "step_1",
+            "operation": "Group transactions by (gender, category) and count total and fraud transactions.",
+            "function_name": "group_transactions_by_gender_category",
+            "inputs": {
+              "transactions": "dataset.transactions"
+            },
+            "expected_output_type": "dict[tuple[str, str], dict[str, int]]",
+            "layer": 0,
+            "code": "def group_transactions_by_gender_category(transactions):\n    result = defaultdict(lambda: {'total_count': 0, 'fraud_count': 0})\n    for transaction in transactions:\n        key = (transaction['gender'], transaction['category'])\n        result[key]['total_count'] += 1\n        if transaction['is_fraud'] == 1:\n            result[key]['fraud_count'] += 1\n    return result"
+          },
+          {
+            "node_id": "step_2",
+            "operation": "Compute fraud rate for each (gender, category) pair.",
+            "function_name": "compute_fraud_rate",
+            "inputs": {
+              "grouped_data": "prev_node.step_1.output"
+            },
+            "expected_output_type": "dict[tuple[str, str], float]",
+            "layer": 1,
+            "code": "def compute_fraud_rate(grouped_data):\n    fraud_rates = {}\n    for key, counts in grouped_data.items():\n        fraud_rates[key] = counts['fraud_count'] / counts['total_count'] if counts['total_count'] > 0 else 0\n    return fraud_rates"
+          },
+          {
+            "node_id": "step_3",
+            "operation": "Compute total transaction count and distinct categories per gender, then compute average transaction count per gender.",
+            "function_name": "compute_gender_averages",
+            "inputs": {
+              "grouped_data": "prev_node.step_1.output"
+            },
+            "expected_output_type": "dict[str, float]",
+            "layer": 1,
+            "code": "def compute_gender_averages(grouped_data):\n    gender_totals = defaultdict(lambda: {'total_count': 0, 'categories': set()})\n    for (gender, category), counts in grouped_data.items():\n        gender_totals[gender]['total_count'] += counts['total_count']\n        gender_totals[gender]['categories'].add(category)\n    gender_averages = {}\n    for gender, data in gender_totals.items():\n        num_categories = len(data['categories'])\n        gender_averages[gender] = data['total_count'] / num_categories if num_categories > 0 else 0\n    return gender_averages"
+          },
+          {
+            "node_id": "step_4",
+            "operation": "Filter (gender, category) pairs where count is greater than gender average.",
+            "function_name": "filter_by_gender_average",
+            "inputs": {
+              "grouped_data": "prev_node.step_1.output",
+              "gender_averages": "prev_node.step_3.output"
+            },
+            "expected_output_type": "dict[tuple[str, str], dict[str, int]]",
+            "layer": 2,
+            "code": "def filter_by_gender_average(grouped_data, gender_averages):\n    filtered_data = {}\n    for key, counts in grouped_data.items():\n        gender = key[0]\n        if counts['total_count'] > gender_averages[gender]:\n            filtered_data[key] = counts\n    return filtered_data"
+          },
+          {
+            "node_id": "step_5",
+            "operation": "Find the category with the highest fraud rate for each gender among filtered pairs.",
+            "function_name": "find_top_category_by_fraud_rate",
+            "inputs": {
+              "filtered_data": "prev_node.step_4.output",
+              "fraud_rates": "prev_node.step_2.output"
+            },
+            "expected_output_type": "dict[str, tuple[str, float]]",
+            "layer": 3,
+            "code": "def find_top_category_by_fraud_rate(filtered_data, fraud_rates):\n    top_categories = {}\n    for (gender, category), counts in filtered_data.items():\n        fraud_rate = fraud_rates[(gender, category)]\n        if gender not in top_categories or fraud_rate > top_categories[gender][1]:\n            top_categories[gender] = (category, fraud_rate)\n    return top_categories"
+          },
+          {
+            "node_id": "step_6",
+            "operation": "Build and sort the final list of [gender, category, fraud_rate].",
+            "function_name": "build_and_sort_final_list",
+            "inputs": {
+              "top_categories": "prev_node.step_5.output"
+            },
+            "expected_output_type": "list[list]",
+            "layer": 4,
+            "code": "def build_and_sort_final_list(top_categories):\n    result = [[gender, category, round(fraud_rate, 6)] for gender, (category, fraud_rate) in top_categories.items()]\n    return sorted(result, key=lambda x: x[2], reverse=True)"
+          }
+        ],
+        "edges": [
+          {
+            "source": "step_1",
+            "target": "step_2"
+          },
+          {
+            "source": "step_1",
+            "target": "step_3"
+          },
+          {
+            "source": "step_1",
+            "target": "step_4"
+          },
+          {
+            "source": "step_2",
+            "target": "step_5"
+          },
+          {
+            "source": "step_3",
+            "target": "step_4"
+          },
+          {
+            "source": "step_4",
+            "target": "step_5"
+          },
+          {
+            "source": "step_5",
+            "target": "step_6"
+          }
+        ],
+        "final_answer_node": "step_6",
+        "description": "This DAG performs a series of computations on the transactions dataset to determine the top category by fraud rate for each gender, filtered by average transaction count per gender."
+      },
+      "feedback": {
+        "is_approved": true,
+        "overall_reasoning": "DAG is valid and approved for execution.",
+        "layer_validations": [
+          {
+            "layer_index": 0,
+            "nodes_in_layer": [
+              "step_1"
+            ],
+            "is_valid": true,
+            "issues": []
+          },
+          {
+            "layer_index": 1,
+            "nodes_in_layer": [
+              "step_2",
+              "step_3"
+            ],
+            "is_valid": true,
+            "issues": []
+          },
+          {
+            "layer_index": 2,
+            "nodes_in_layer": [
+              "step_4"
+            ],
+            "is_valid": true,
+            "issues": []
+          },
+          {
+            "layer_index": 3,
+            "nodes_in_layer": [
+              "step_5"
+            ],
+            "is_valid": true,
+            "issues": []
+          },
+          {
+            "layer_index": 4,
+            "nodes_in_layer": [
+              "step_6"
+            ],
+            "is_valid": true,
+            "issues": []
+          }
+        ],
+        "specific_errors": [],
+        "suggestions": []
+      }
+    }
+  ],
+  "messages": [
+    "[DAGBuilder] Iteration 1 for q_hard_02: generated DAG with 6 nodes",
+    "[Critic] Iteration 1 for q_hard_02: APPROVED \u2014 0 issue(s)",
+    "[Executor] q_hard_02: SUCCESS \u2014 answer=[['M', 'shopping_net', 0.536885], ['F', 'grocery_pos', 0.365517]] (0.0ms)"
+  ]
+}
