@@ -33,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 try:
     from dotenv import load_dotenv
     _env_path = Path(__file__).parent.parent / ".env"
-    load_dotenv(dotenv_path=_env_path, override=False)  # override=False: real env vars win
+    load_dotenv(dotenv_path=_env_path, override=True)  # override=True: .env key always wins
 except ImportError:
     pass  # python-dotenv not installed — fall back to os.environ only
 
@@ -73,13 +73,26 @@ MATCH_TOLERANCE = 0.0001
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _serialize(obj: Any) -> Any:
-    """JSON-serializable fallback for complex objects."""
+def _make_serializable(obj: Any) -> Any:
+    """Recursively convert an object to a JSON-serializable form."""
+    import types
+    if obj is None or isinstance(obj, (bool, int, float, str)):
+        return obj
+    if isinstance(obj, (dict, types.MappingProxyType)):
+        return {str(k): _make_serializable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple, set, frozenset)):
+        return [_make_serializable(i) for i in obj]
     if hasattr(obj, "model_dump"):
-        return obj.model_dump()
+        return _make_serializable(obj.model_dump())
     if hasattr(obj, "__dict__"):
-        return obj.__dict__
+        return _make_serializable(obj.__dict__)
+    # Fallback: convert anything else to string
     return str(obj)
+
+
+def _serialize(obj: Any) -> Any:
+    """JSON default() fallback for types json can't handle natively."""
+    return _make_serializable(obj)
 
 
 def _print_dag_summary(dag: Any, label: str) -> None:
@@ -164,11 +177,11 @@ def main() -> None:
     print(f"  {QUESTION.text}")
     print(f"\nGROUND TRUTH: [{GROUND_TRUTH_CATEGORY!r}, {GROUND_TRUTH_SCORE}]")
     print(f"\nSTEPS REQUIRED:")
-    print("  Layer 0: Group transactions by (category, month) — parse DD-MM-YYYY dates")
+    print("  Layer 0: Group transactions by (category, month) - parse DD-MM-YYYY dates")
     print("  Layer 1: Compute monthly fraud rate per (category, month) bucket")
     print("  Layer 2: Pivot to per-category list of monthly fraud rates")
     print("  Layer 3: Compute statistics.stdev per category (skip <2 data points)")
-    print("  Layer 4: Find category with max stdev → return [name, round(stdev,6)]")
+    print("  Layer 4: Find category with max stdev -> return [name, round(stdev,6)]")
     print("=" * 70 + "\n")
 
     # Build initial CriticLoopState
@@ -195,7 +208,7 @@ def main() -> None:
     dag_history = final_state.get("dag_history", [])
 
     # Print per-iteration trace
-    print("\n── ITERATION TRACE ──────────────────────────────────────────────────")
+    print("\n-- ITERATION TRACE --------------------------------------------------")
     for entry in dag_history:
         i = entry.get("iteration", "?")
         dag = entry.get("dag")
@@ -205,7 +218,7 @@ def main() -> None:
         _print_feedback_summary(feedback)
 
     # Print final result
-    print("\n── FINAL RESULT ─────────────────────────────────────────────────────")
+    print("\n-- FINAL RESULT -----------------------------------------------------")
     print(f"Iterations used : {iterations} / 3")
     print(f"Approved        : {is_approved}")
 
@@ -227,7 +240,7 @@ def main() -> None:
             except (TypeError, ValueError):
                 correct = False
 
-        print(f"Correct         : {'YES ✓' if correct else 'NO ✗'}")
+        print(f"Correct         : {'YES' if correct else 'NO'}")
 
         # Show intermediate node outputs
         if result.node_outputs and verbose:
@@ -238,13 +251,14 @@ def main() -> None:
                     out_str = out_str[:120] + "..."
                 print(f"  {node_id}: {out_str}")
     else:
-        err = result.error if result else "Critic loop exhausted — no execution"
+        err = result.error if result else "Critic loop exhausted - no execution"
         print(f"FAILED          : {err}")
 
     print("=" * 70 + "\n")
 
-    # Save to JSON
-    out = {
+    # Save to JSON — pre-process the whole structure to handle tuple keys
+    # (node_outputs may contain dicts with tuple keys from defaultdict grouping)
+    out = _make_serializable({
         "question": QUESTION.model_dump(),
         "ground_truth": [GROUND_TRUTH_CATEGORY, GROUND_TRUTH_SCORE],
         "iterations_used": iterations,
@@ -253,10 +267,10 @@ def main() -> None:
         "execution_result": result.model_dump() if result else None,
         "dag_history": dag_history,
         "messages": [m.content for m in final_state.get("messages", [])],
-    }
+    })
     output_path = Path("single_question_result.json")
     output_path.write_text(
-        json.dumps(out, indent=2, default=_serialize),
+        json.dumps(out, indent=2),
         encoding="utf-8",
     )
     logger.info(f"Full result written to {output_path}")

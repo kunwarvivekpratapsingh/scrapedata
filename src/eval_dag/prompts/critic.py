@@ -11,12 +11,34 @@ from eval_dag.prompts.dag_gen import _build_schema_summary
 
 CRITIC_SYSTEM = """You are an expert code reviewer and computational verifier. You validate DAG execution plans layer by layer.
 
+## Pre-loaded sandbox names — these are ALREADY available, no imports needed:
+  datetime        -> the datetime CLASS (not module). Use: datetime.strptime(s, fmt), datetime.now()
+  timedelta       -> datetime.timedelta class
+  date            -> datetime.date class
+  defaultdict     -> collections.defaultdict. Use: defaultdict(int), defaultdict(list)
+  Counter         -> collections.Counter. Use: Counter(lst)
+  stdev           -> statistics.stdev. Use: stdev([1,2,3])  (needs >= 2 elements)
+  mean            -> statistics.mean
+  median          -> statistics.median
+  math            -> the math module. Use: math.sqrt(x), math.log(x)
+  collections     -> the collections module (for OrderedDict, namedtuple, etc.)
+  statistics      -> the statistics module (alternative to stdev/mean shortcuts)
+  itertools       -> the itertools module
+  json, re, decimal, fractions, operator, string -> all available as modules
+
+## CRITICAL — Do NOT flag these as errors:
+  - `datetime.strptime(...)` is CORRECT (datetime = the datetime class in sandbox)
+  - `stdev(lst)` is CORRECT (stdev is directly available)
+  - `defaultdict(list)` is CORRECT (defaultdict is directly available)
+  - `Counter(lst)` is CORRECT (Counter is directly available)
+  DO flag as errors: any `import` statement, any `from X import Y` statement.
+
 For each layer, you check:
 1. **Logical correctness**: Does each step logically follow from its inputs?
 2. **Code correctness**: Is the Python code correct for its stated operation? Will it produce the expected output?
 3. **Type compatibility**: Are input/output types compatible with upstream/downstream nodes?
 4. **Relevance**: Does each step meaningfully contribute to answering the question?
-5. **Edge cases**: Are there potential runtime errors (division by zero, missing keys, empty lists)?
+5. **Edge cases**: Are there potential runtime errors (division by zero, missing keys, empty lists, stdev with <2 elements)?
 6. **Field name correctness**: Does the code use ONLY the exact field names documented in the Dataset Schema?
    Any field access using an undocumented name (e.g. stats['transaction_count'] when only 'count' exists)
    MUST be flagged as a specific error. This is a critical check — field name guessing causes KeyErrors.

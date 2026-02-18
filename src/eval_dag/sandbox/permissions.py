@@ -72,8 +72,20 @@ SAFE_MODULES: set[str] = {
     "random",
 }
 
+# Modules that LLM-generated user code must NEVER be allowed to import.
+# Note: internal C-extension modules like _strptime, _datetime, _statistics
+# are intentionally NOT blocked — Python's standard library calls them
+# transparently during lazy initialisation (e.g. first call to strptime).
+BLOCKED_IMPORT_MODULES: set[str] = {
+    "os", "sys", "subprocess", "socket", "pickle", "importlib",
+    "ctypes", "threading", "multiprocessing", "shutil", "pathlib",
+    "io", "pty", "atexit", "signal", "gc", "inspect", "dis",
+    "ast", "code", "codeop", "compileall", "py_compile", "builtins",
+    "site", "sysconfig", "platform", "struct", "mmap",
+}
+
 FORBIDDEN_BUILTINS: set[str] = {
-    "__import__",
+    # __import__ is NOT in this set — see build_restricted_builtins() for why
     "exec",
     "eval",
     "compile",
@@ -97,19 +109,60 @@ FORBIDDEN_BUILTINS: set[str] = {
 }
 
 
+def _make_safe_import(original_import):
+    """Return a restricted __import__ that blocks dangerous modules.
+
+    Why we need this: Python's C-level standard library (datetime.strptime,
+    statistics.stdev, re.compile, etc.) performs lazy internal imports of
+    private C-extension modules like _strptime, _datetime, _statistics on
+    first use. When __builtins__ is a plain dict with no __import__ key,
+    these lazy imports raise KeyError: '__import__', breaking stdlib calls
+    even though the LLM code contains no import statements.
+
+    The fix: include a safe __import__ that ALLOWS internal/stdlib lazy
+    imports but BLOCKS any top-level user-facing dangerous modules.
+    """
+    def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
+        top_level = name.split(".")[0]
+        if top_level in BLOCKED_IMPORT_MODULES:
+            raise ImportError(
+                f"Import of '{name}' is not allowed in the sandbox. "
+                f"Use the pre-loaded module variables instead."
+            )
+        return original_import(name, globals, locals, fromlist, level)
+    return safe_import
+
+
 def build_restricted_builtins() -> dict:
-    """Build a restricted __builtins__ dict for sandbox execution."""
-    import builtins
+    """Build a restricted __builtins__ dict for sandbox execution.
+
+    Includes a safe __import__ so that Python's stdlib C-extensions can
+    perform their internal lazy imports (e.g. _strptime for datetime.strptime)
+    without allowing user code to import dangerous modules like os or sys.
+    """
+    import builtins as _builtins
 
     restricted = {}
     for name in SAFE_BUILTINS:
-        if hasattr(builtins, name):
-            restricted[name] = getattr(builtins, name)
+        if hasattr(_builtins, name):
+            restricted[name] = getattr(_builtins, name)
 
     # Add None, True, False explicitly
     restricted["None"] = None
     restricted["True"] = True
     restricted["False"] = False
+
+    # Add exception types so node code can raise/catch them
+    for exc_name in ("ValueError", "TypeError", "KeyError", "IndexError",
+                     "AttributeError", "StopIteration", "ZeroDivisionError",
+                     "RuntimeError", "Exception", "BaseException",
+                     "NotImplementedError", "OverflowError"):
+        if hasattr(_builtins, exc_name):
+            restricted[exc_name] = getattr(_builtins, exc_name)
+
+    # CRITICAL: include a safe __import__ to allow stdlib C-extension lazy
+    # imports (like _strptime) while blocking dangerous user imports.
+    restricted["__import__"] = _make_safe_import(_builtins.__import__)
 
     return restricted
 

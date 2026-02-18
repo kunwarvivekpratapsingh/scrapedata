@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 try:
     from dotenv import load_dotenv
     _env_path = Path(__file__).parent.parent / ".env"
-    load_dotenv(dotenv_path=_env_path, override=False)  # override=False: real env vars win
+    load_dotenv(dotenv_path=_env_path, override=True)  # override=True: .env key always wins
 except ImportError:
     pass  # python-dotenv not installed — fall back to os.environ only
 

@@ -60,8 +60,25 @@ def sandbox_execute_node(
         "__builtins__": restricted_builtins,
         "__inputs__": resolved_inputs,
     }
-    # Make safe modules available as globals
+    # Make safe modules available as globals (e.g. math, statistics, collections, datetime)
     restricted_globals.update(safe_modules)
+
+    # Also expose the most commonly used sub-objects directly so LLM code like
+    # `datetime.strptime(s, fmt)` or `statistics.stdev(lst)` works as expected.
+    # Without this, `datetime` resolves to the *module*, so the LLM must write
+    # `datetime.datetime.strptime(...)` — which it rarely does correctly.
+    import datetime as _dt
+    import statistics as _stats
+    import collections as _col
+    restricted_globals["datetime"] = _dt.datetime          # datetime.strptime(...) works
+    restricted_globals["timedelta"] = _dt.timedelta        # timedelta(days=1) works
+    restricted_globals["date"] = _dt.date                  # date.today() works
+    restricted_globals["defaultdict"] = _col.defaultdict   # defaultdict(int) works
+    restricted_globals["Counter"] = _col.Counter           # Counter(lst) works
+    restricted_globals["OrderedDict"] = _col.OrderedDict   # OrderedDict() works
+    restricted_globals["stdev"] = _stats.stdev             # stdev(lst) works
+    restricted_globals["mean"] = _stats.mean               # mean(lst) works
+    restricted_globals["median"] = _stats.median           # median(lst) works
 
     # Build the execution code:
     # 1. Define the function from node_spec.code

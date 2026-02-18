@@ -15,9 +15,41 @@ DAG_GEN_SYSTEM = """You are an expert computational planner. Given a question ab
 2. Nodes are organized in layers: layer 0 = no dependencies, layer N depends only on layers < N
 3. Inputs reference either the dataset ("dataset.<field>") or a previous node's output ("prev_node.<node_id>.output")
 4. The final_answer_node must be in the last layer and produce the answer
-5. Code must be self-contained — only use: math, statistics, collections, itertools, functools, json, re, datetime, decimal, fractions, random
-6. NO imports in node code — safe modules are pre-loaded in the execution environment
-7. Each function must be named exactly as specified in function_name
+5. NEVER write import statements in node code — modules are pre-loaded in the execution environment
+6. Each function must be named exactly as specified in function_name
+
+## Pre-loaded names — use EXACTLY as shown below (NO imports needed):
+The following names are available directly in every node — do NOT import them:
+
+  # Date parsing
+  datetime.strptime("01-05-2019 13:53", "%d-%m-%Y %H:%M")   # returns datetime object
+  datetime.strptime("01-05-2019", "%d-%m-%Y")                 # date-only
+  dt_obj.strftime("%Y-%m")                                     # format to "2019-05"
+
+  # Collections
+  defaultdict(int)        # defaultdict with int default
+  defaultdict(list)       # defaultdict with list default
+  Counter(some_list)      # count occurrences
+
+  # Statistics
+  stdev([0.1, 0.2, 0.3])  # population standard deviation — needs >= 2 elements
+  mean([0.1, 0.2, 0.3])   # arithmetic mean
+  median([0.1, 0.2, 0.3]) # median
+
+  # Math & others
+  math.sqrt(x), math.log(x), math.floor(x)
+  sorted(iterable, key=lambda x: x[1], reverse=True)
+  collections.OrderedDict(), itertools.groupby(...)
+
+## CRITICAL — Wrong vs Right patterns:
+  WRONG:  from datetime import datetime; dt = datetime.strptime(...)
+  RIGHT:  dt = datetime.strptime(...)          # datetime IS the datetime class
+
+  WRONG:  import statistics; statistics.stdev(lst)
+  RIGHT:  stdev(lst)                           # stdev is directly available
+
+  WRONG:  from collections import defaultdict; d = defaultdict(list)
+  RIGHT:  d = defaultdict(list)                # defaultdict is directly available
 
 ## Response Format (JSON):
 {
