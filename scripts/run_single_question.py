@@ -74,27 +74,49 @@ def _serialize(obj: Any) -> Any:
 
 
 def _print_dag_summary(dag: Any, label: str) -> None:
-    """Print a compact summary of a GeneratedDAG."""
+    """Print a compact summary of a GeneratedDAG (accepts dict or Pydantic object)."""
     if dag is None:
         print(f"  {label}: <none>")
         return
-    print(f"  {label}: {len(dag.nodes)} nodes across "
-          f"{1 + max((n.layer for n in dag.nodes), default=0)} layers")
-    for node in sorted(dag.nodes, key=lambda n: (n.layer, n.node_id)):
-        print(f"    [L{node.layer}] {node.node_id}: {node.operation}")
+    # dag_history stores model_dump() dicts; handle both dicts and Pydantic objects
+    if isinstance(dag, dict):
+        nodes = dag.get("nodes", [])
+        layers = [n.get("layer", 0) for n in nodes]
+        max_layer = max(layers, default=0)
+        print(f"  {label}: {len(nodes)} nodes across {1 + max_layer} layers")
+        for node in sorted(nodes, key=lambda n: (n.get("layer", 0), n.get("node_id", ""))):
+            print(f"    [L{node.get('layer', 0)}] {node.get('node_id', '?')}: {node.get('operation', '?')}")
+    else:
+        nodes = dag.nodes
+        max_layer = max((n.layer for n in nodes), default=0)
+        print(f"  {label}: {len(nodes)} nodes across {1 + max_layer} layers")
+        for node in sorted(nodes, key=lambda n: (n.layer, n.node_id)):
+            print(f"    [L{node.layer}] {node.node_id}: {node.operation}")
 
 
 def _print_feedback_summary(feedback: Any) -> None:
-    """Print a compact summary of CriticFeedback."""
+    """Print a compact summary of CriticFeedback (accepts dict or Pydantic object)."""
     if feedback is None:
         return
-    verdict = "APPROVED" if feedback.is_approved else "REJECTED"
-    print(f"  Critic: {verdict}")
-    if not feedback.is_approved:
-        for err in feedback.specific_errors[:5]:
-            print(f"    - {err}")
-        if feedback.suggestions:
-            print(f"    Suggestions: {feedback.suggestions[0]}")
+    # dag_history stores model_dump() dicts; handle both dicts and Pydantic objects
+    if isinstance(feedback, dict):
+        is_approved = feedback.get("is_approved", False)
+        verdict = "APPROVED" if is_approved else "REJECTED"
+        print(f"  Critic: {verdict}")
+        if not is_approved:
+            for err in feedback.get("specific_errors", [])[:5]:
+                print(f"    - {err}")
+            suggestions = feedback.get("suggestions", [])
+            if suggestions:
+                print(f"    Suggestion: {suggestions[0]}")
+    else:
+        verdict = "APPROVED" if feedback.is_approved else "REJECTED"
+        print(f"  Critic: {verdict}")
+        if not feedback.is_approved:
+            for err in feedback.specific_errors[:5]:
+                print(f"    - {err}")
+            if feedback.suggestions:
+                print(f"    Suggestion: {feedback.suggestions[0]}")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
