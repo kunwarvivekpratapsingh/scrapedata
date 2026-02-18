@@ -1,0 +1,162 @@
+{
+  "description": "Credit card transaction fraud detection dataset covering 2019-01-01 to 2020-03-10. Contains 1,048,575 transactions from cardholders across the US, with a fraud rate of 0.5728%. 14 merchant categories and 51 US states represented.",
+  "domain": "Financial fraud detection",
+  "source": "Synthetic credit card transaction dataset",
+  "date_range": "2019-01-01 to 2020-03-10",
+  "total_rows": 1048575,
+  "fraud_rate": 0.00572777,
+  "columns": {
+    "trans_date_trans_time": {
+      "description": "Transaction datetime",
+      "type": "datetime_string",
+      "format": "DD-MM-YYYY HH:MM",
+      "strptime": "%d-%m-%Y %H:%M",
+      "examples": ["01-01-2019 00:21", "15-06-2019 14:30", "31-12-2019 23:59"],
+      "note": "Day-first format — NOT month-first. Use strptime('%d-%m-%Y %H:%M') to parse."
+    },
+    "cc_num": {
+      "description": "Credit card number",
+      "type": "identifier",
+      "sensitivity": "pii",
+      "format": "scientific notation string, e.g. '2.70319E+15'",
+      "note": "Use as string key/identifier only — do NOT cast to int, sum, or compute on. Cannot be parsed as a normal integer."
+    },
+    "merchant": {
+      "description": "Merchant name",
+      "type": "string",
+      "note": "All names start with 'fraud_' as a naming convention ONLY — this prefix is NOT a fraud indicator. Use the is_fraud column exclusively for fraud detection."
+    },
+    "category": {
+      "description": "Transaction merchant category",
+      "type": "categorical",
+      "cardinality": 14,
+      "values": ["misc_net", "grocery_pos", "entertainment", "gas_transport", "misc_pos", "grocery_net", "shopping_net", "shopping_pos", "food_dining", "personal_care", "health_fitness", "travel", "kids_pets", "home"]
+    },
+    "amt": {
+      "description": "Transaction amount in USD",
+      "type": "float",
+      "range": "0.0 to ~28000.0",
+      "examples": [4.97, 107.23, 748.33, 1.06, 2159.44],
+      "note": "Non-negative float. Use directly for arithmetic."
+    },
+    "first": {
+      "description": "Cardholder first name",
+      "type": "string",
+      "sensitivity": "pii",
+      "note": "Personal identity information — avoid extracting or listing individual names in questions."
+    },
+    "last": {
+      "description": "Cardholder last name",
+      "type": "string",
+      "sensitivity": "pii",
+      "note": "Personal identity information — avoid extracting or listing individual names in questions."
+    },
+    "gender": {
+      "description": "Cardholder gender",
+      "type": "categorical",
+      "values": ["M", "F"],
+      "cardinality": 2
+    },
+    "city": {
+      "description": "Cardholder city of residence",
+      "type": "string",
+      "cardinality_approx": "high (many unique cities)"
+    },
+    "state": {
+      "description": "Cardholder state (2-letter US code)",
+      "type": "categorical",
+      "cardinality": 51,
+      "note": "Includes DC. Always uppercase 2-letter codes, e.g. 'CA', 'NY', 'TX'."
+    },
+    "zip": {
+      "description": "Cardholder zip code",
+      "type": "string",
+      "note": "Stored as string to preserve leading zeros."
+    },
+    "lat": {
+      "description": "Cardholder address latitude",
+      "type": "float",
+      "range": "approximately 20.0 to 65.0 (continental US + AK/HI)"
+    },
+    "long": {
+      "description": "Cardholder address longitude",
+      "type": "float",
+      "range": "approximately -160.0 to -65.0 (continental US + AK/HI)"
+    },
+    "city_pop": {
+      "description": "Population of cardholder's city",
+      "type": "integer",
+      "range": "1 to several million"
+    },
+    "job": {
+      "description": "Cardholder occupation/job title",
+      "type": "string",
+      "sensitivity": "pii",
+      "cardinality_approx": "high (many unique job titles)"
+    },
+    "dob": {
+      "description": "Cardholder date of birth",
+      "type": "date_string",
+      "sensitivity": "pii",
+      "format": "DD-MM-YYYY",
+      "strptime": "%d-%m-%Y",
+      "examples": ["15-03-1985", "01-11-1962"],
+      "note": "Day-first format — NOT month-first. Use strptime('%d-%m-%Y') to parse."
+    },
+    "trans_num": {
+      "description": "Unique transaction identifier",
+      "type": "identifier",
+      "format": "hex string",
+      "note": "Use as unique key only — do not compute on."
+    },
+    "unix_time": {
+      "description": "Transaction Unix timestamp",
+      "type": "integer",
+      "unit": "seconds since epoch",
+      "note": "Can use datetime.fromtimestamp() or datetime.utcfromtimestamp() to convert."
+    },
+    "merch_lat": {
+      "description": "Merchant location latitude",
+      "type": "float"
+    },
+    "merch_long": {
+      "description": "Merchant location longitude",
+      "type": "float"
+    },
+    "is_fraud": {
+      "description": "Fraud label for the transaction",
+      "type": "binary_integer",
+      "values": [0, 1],
+      "note": "1 = fraudulent, 0 = legitimate. This is the ONLY field to use for fraud detection — do NOT use merchant name as a fraud signal."
+    },
+    "merch_zipcode": {
+      "description": "Merchant zip code",
+      "type": "string",
+      "nullable": true,
+      "null_rate": "~15%",
+      "note": "Approximately 15% of rows have None/null. Always check: if row['merch_zipcode'] is not None before accessing."
+    }
+  },
+  "dataset_keys": {
+    "transactions": "Stratified sample of 5000 transaction dicts with all 23 columns. Fraud rows overrepresented at ~20% for analytical utility. Use for cross-dimensional or per-transaction analysis.",
+    "total_transactions": "Integer count of all 1,048,575 rows in the full dataset",
+    "total_fraudulent": "Integer count of all 6,006 fraudulent rows in the full dataset",
+    "fraud_rate": "Overall fraud rate as float (0.005728) computed from all rows",
+    "date_range": "Dict with keys 'start' and 'end' as YYYY-MM-DD strings",
+    "amount_distribution": "Dict: min, max, mean, median, std, p25, p75, p95, p99 of transaction amounts (all rows)",
+    "category_stats": "Dict: category_name -> {count, total_amt, fraud_count, fraud_rate, avg_amt}. 14 categories, computed from all rows.",
+    "state_stats": "Dict: state_code -> {count, total_amt, fraud_count}. 51 US states, computed from all rows.",
+    "top_merchants": "List of top 20 merchants by count: [{merchant, count, total_amt, fraud_count, fraud_rate}]",
+    "gender_breakdown": "Dict: 'M' or 'F' -> {count, fraud_count, total_amt}, computed from all rows",
+    "time_series": "Dict: 'YYYY-MM' -> {count, total_amt, fraud_count}, monthly aggregates from all rows",
+    "sample_info": "Dict: sample_size, fraud_in_sample, fraud_rate_in_sample, note"
+  },
+  "important_notes": [
+    "CRITICAL: All merchant names begin with 'fraud_' — naming convention only, NOT a fraud signal. Use is_fraud column only.",
+    "The transactions sample overrepresents fraud (~20%) vs real rate (~0.57%). Use pre-aggregated fields for global stats.",
+    "cc_num is in scientific notation as a string (e.g. '2.70319E+15') — treat as identifier only.",
+    "merch_zipcode has ~15% null values (Python None) — always handle None when iterating transactions.",
+    "trans_date_trans_time and dob are in DD-MM-YYYY format (day first, NOT month first).",
+    "Sandbox has no pandas/numpy. Use: list comprehensions, sum(), max(), min(), sorted(), collections.Counter, statistics, math."
+  ]
+}
