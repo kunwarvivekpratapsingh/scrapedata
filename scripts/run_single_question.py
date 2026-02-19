@@ -1,19 +1,22 @@
 """Run a single hard question through the eval-dag critic loop.
 
 Tests the full pipeline: DAG builder -> critic -> sandbox executor
-with a deliberately complex 7-step question about per-gender fraud analysis.
+with a complex Haversine-distance + fraud-rate analysis question.
 
-The question requires exactly 7 sequential DAG layers:
-  Layer 0: Group transactions by (gender, category) -> count + fraud_count
-  Layer 1: Compute per-(gender, category) fraud rate
-  Layer 2: Compute total transaction count per gender
-  Layer 3: Compute per-gender average transaction count across all categories
-  Layer 4: Filter (gender, category) pairs where count > gender average
-  Layer 5: For each gender, find category with max fraud rate from filtered set
-  Layer 6: Format result as [[gender, category, round(fraud_rate, 6)], ...]
-            sorted by fraud_rate descending
+The question requires these sequential DAG layers:
+  Layer 0: Compute Haversine distance (km) between cardholder and merchant
+           for every transaction using lat/long/merch_lat/merch_long
+  Layer 1: Assign each transaction to a distance band:
+           0-10km, 10-50km, 50-200km, 200+km
+  Layer 2: Group by (category, distance_band) -> count, fraud_count, amt_sum
+  Layer 3: Filter cells with count >= 20; compute fraud_rate and avg_amt
+  Layer 4: Sort by fraud_rate descending, take top 3
+  Layer 5: Return list of [category, distance_band, fraud_rate, count, avg_amt]
 
-Ground truth: [['M', 'shopping_net', 0.536885], ['F', 'grocery_pos', 0.365517]]
+Ground truth (top 3):
+  [['misc_net', '10-50km', 0.5, 66, 435.85],
+   ['grocery_pos', '10-50km', 0.415929, 113, 189.28],
+   ['shopping_net', '50-200km', 0.414458, 415, 469.43]]
 
 Usage:
     py scripts/run_single_question.py [--verbose]
@@ -44,48 +47,54 @@ from eval_dag.graphs.critic_loop import critic_loop
 from eval_dag.state.models import DifficultyLevel, Question
 
 
-# ── The hard question (7 DAG layers) ──────────────────────────────────────────
+# ── The hard question (Haversine + fraud rate by distance band) ───────────────
 
 QUESTION = Question(
-    id="q_hard_02",
+    id="q_hard_03",
     text=(
         "Using the transactions list, perform the following steps in order: "
-        "STEP 1 - group transactions by (gender, category) and count total transactions "
-        "and fraud transactions for each (gender, category) pair; "
-        "STEP 2 - compute the fraud rate for each (gender, category) pair as "
-        "fraud_count divided by total_count; "
-        "STEP 3 - using the counts from STEP 1, compute the total transaction count "
-        "per gender (sum of counts across all categories for that gender) and the "
-        "number of distinct categories per gender, then compute the per-gender average "
-        "transaction count as total_for_gender divided by num_categories_for_gender; "
-        "STEP 4 - filter the (gender, category) pairs from STEP 1 keeping only those "
-        "where the count is strictly greater than the gender average from STEP 3; "
-        "STEP 5 - for each gender, find the category with the highest fraud rate "
-        "among the filtered pairs from STEP 4; "
-        "STEP 6 - build a list of [gender, category, round(fraud_rate, 6)] for each "
-        "gender's top category and sort it by fraud_rate descending. "
-        "Return the final sorted list."
+        "STEP 1 - for every transaction compute the Haversine distance in kilometres "
+        "between the cardholder location (lat, long) and the merchant location "
+        "(merch_lat, merch_long) using the formula: "
+        "a = sin((phi2-phi1)/2)^2 + cos(phi1)*cos(phi2)*sin((lam2-lam1)/2)^2, "
+        "distance_km = 2 * R * asin(sqrt(a)) where R=6371 and all angles are in radians "
+        "(use math.radians, math.sin, math.cos, math.asin, math.sqrt); "
+        "STEP 2 - assign each transaction to a distance band based on its distance_km: "
+        "'0-10km' if distance_km < 10, '10-50km' if 10 <= distance_km < 50, "
+        "'50-200km' if 50 <= distance_km < 200, '200+km' if distance_km >= 200; "
+        "STEP 3 - group transactions by (category, distance_band) and for each group "
+        "accumulate: total_count, fraud_count (sum of is_fraud), amt_sum (sum of amt); "
+        "STEP 4 - keep only groups where total_count >= 20, then for each kept group "
+        "compute fraud_rate = fraud_count / total_count and avg_amt = amt_sum / total_count, "
+        "rounding fraud_rate to 6 decimal places and avg_amt to 2 decimal places; "
+        "STEP 5 - sort the kept groups by fraud_rate descending and take the top 3; "
+        "STEP 6 - return the top 3 as a list of "
+        "[category, distance_band, fraud_rate, total_count, avg_amt] sorted by fraud_rate descending."
     ),
     difficulty_rank=10,
     difficulty_level=DifficultyLevel.HARD,
     reasoning=(
-        "Requires 6+ sequential steps that MUST be ordered correctly: "
-        "(1) group transactions by (gender, category) - this MUST come first to produce raw counts, "
-        "(2) compute per-(gender, category) fraud rate from the grouped counts, "
-        "(3) compute per-gender average from the same grouped counts (total_count / num_distinct_categories), "
-        "(4) filter pairs where count > gender average - depends on both step 1 counts and step 3 averages, "
-        "(5) argmax fraud rate per gender from filtered set - depends on step 2 rates and step 4 filter, "
-        "(6) format and sort result descending by fraud_rate. "
-        "The critical trap: computing averages BEFORE grouping raw data will give wrong results. "
-        "Tests nested grouping, sequential multi-step aggregation, per-group threshold filtering, "
-        "argmax within a filtered group, and multi-key sorting."
+        "Requires 6 sequential steps: "
+        "(1) per-row Haversine calculation using math.radians/sin/cos/asin/sqrt - no imports needed, "
+        "(2) band assignment via if/elif thresholds, "
+        "(3) group by (category, distance_band) accumulating count, fraud_count, amt_sum using defaultdict, "
+        "(4) filter cells with >= 20 rows then compute fraud_rate and avg_amt, "
+        "(5) sort filtered cells by fraud_rate descending and slice top 3, "
+        "(6) format as list of [category, band, fraud_rate, count, avg_amt]. "
+        "Tests Haversine formula implementation, bucketing/banding, multi-field aggregation, "
+        "minimum-volume filtering, and combined sort+slice. "
+        "Critical: math.* functions are available directly - do NOT import math."
     ),
     relevant_data_keys=["transactions"],
 )
 
 # Verified ground truth computed from the full 5000-row transactions sample
-# M -> shopping_net (fraud_rate 0.536885), F -> grocery_pos (fraud_rate 0.365517)
-GROUND_TRUTH = [["M", "shopping_net", 0.536885], ["F", "grocery_pos", 0.365517]]
+# Top 3 (category, distance_band) cells by fraud_rate, min 20 transactions
+GROUND_TRUTH = [
+    ["misc_net",     "10-50km",   0.5,      66,  435.85],
+    ["grocery_pos",  "10-50km",   0.415929, 113, 189.28],
+    ["shopping_net", "50-200km",  0.414458, 415, 469.43],
+]
 MATCH_TOLERANCE = 0.0001
 
 
@@ -191,17 +200,18 @@ def main() -> None:
 
     # Print question banner
     print("\n" + "=" * 70)
-    print("QUESTION (rank 10 / HARD - 7 DAG layers):")
+    print("QUESTION (rank 10 / HARD - Haversine distance + fraud rate):")
     print(f"  {QUESTION.text}")
-    print(f"\nGROUND TRUTH: {GROUND_TRUTH}")
+    print(f"\nGROUND TRUTH (top 3 by fraud_rate):")
+    for row in GROUND_TRUTH:
+        print(f"  {row}")
     print(f"\nSTEPS REQUIRED:")
-    print("  Layer 0: Group transactions by (gender, category) -> count + fraud_count")
-    print("  Layer 1: Compute per-(gender, category) fraud rate = fraud_count / total_count")
-    print("  Layer 2: Compute total transaction count per gender")
-    print("  Layer 3: Compute per-gender avg count = total_for_gender / num_categories_for_gender")
-    print("  Layer 4: Filter (gender, category) pairs where count > gender average")
-    print("  Layer 5: For each gender, find category with max fraud rate from filtered set")
-    print("  Layer 6: Format as [[gender, category, round(fraud_rate,6)], ...] sorted desc by fraud_rate")
+    print("  Layer 0: Compute Haversine distance (km) per transaction from lat/long fields")
+    print("  Layer 1: Assign distance band: 0-10km / 10-50km / 50-200km / 200+km")
+    print("  Layer 2: Group by (category, distance_band) -> total_count, fraud_count, amt_sum")
+    print("  Layer 3: Filter cells >= 20 txns; compute fraud_rate and avg_amt")
+    print("  Layer 4: Sort by fraud_rate desc, take top 3")
+    print("  Layer 5: Return [[category, band, fraud_rate, count, avg_amt], ...]")
     print("=" * 70 + "\n")
 
     # Build initial CriticLoopState
@@ -249,20 +259,23 @@ def main() -> None:
         print(f"Expected        : {GROUND_TRUTH}")
         print(f"Execution time  : {result.execution_time_ms:.1f} ms")
 
-        # Validate answer: list of [gender, category, fraud_rate] pairs sorted desc
-        # Accept either list-of-lists or list-of-tuples, order must match ground truth
+        # Validate answer: list of [category, distance_band, fraud_rate, count, avg_amt]
+        # rows sorted by fraud_rate descending, top 3.
+        # Accept list-of-lists or list-of-tuples; order must match ground truth.
         try:
             if isinstance(answer, (list, tuple)) and len(answer) == len(GROUND_TRUTH):
                 correct = True
                 for ans_row, gt_row in zip(answer, GROUND_TRUTH):
                     ans_row = list(ans_row)
-                    if len(ans_row) != 3:
+                    if len(ans_row) != 5:
                         correct = False
                         break
-                    gender_ok = str(ans_row[0]) == str(gt_row[0])
-                    cat_ok    = str(ans_row[1]) == str(gt_row[1])
-                    score_ok  = abs(float(ans_row[2]) - float(gt_row[2])) < MATCH_TOLERANCE
-                    if not (gender_ok and cat_ok and score_ok):
+                    cat_ok   = str(ans_row[0]) == str(gt_row[0])
+                    band_ok  = str(ans_row[1]) == str(gt_row[1])
+                    fr_ok    = abs(float(ans_row[2]) - float(gt_row[2])) < MATCH_TOLERANCE
+                    cnt_ok   = int(ans_row[3]) == int(gt_row[3])
+                    amt_ok   = abs(float(ans_row[4]) - float(gt_row[4])) < 0.05
+                    if not (cat_ok and band_ok and fr_ok and cnt_ok and amt_ok):
                         correct = False
                         break
         except (TypeError, ValueError, IndexError):

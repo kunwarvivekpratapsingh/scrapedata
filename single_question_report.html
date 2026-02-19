@@ -393,7 +393,7 @@
     <h1>Eval Report</h1>
     <div class="header-meta">
       Dataset: <strong>single_question_result</strong>
-      &nbsp;·&nbsp; Generated: 2026-02-19 11:38:47
+      &nbsp;·&nbsp; Generated: 2026-02-19 11:49:13
     </div>
   </div>
   <div class="pass-rate-badge ok">100.0% Pass Rate</div>
@@ -450,7 +450,7 @@
   <details class="q-accordion q-ok">
   <summary>
     <span class="q-id">Q10</span>
-    <span class="q-text">Using the transactions list, perform the following steps in order: STEP 1 - group transactions by (gender, category) and count total transactions and fraud transactions for each (gender, category) pair; STEP 2 - compute the fraud rate for each (gender, category) pair as fraud_count divided by total_count; STEP 3 - using the counts from STEP 1, compute the total transaction count per gender (sum of counts across all categories for that gender) and the number of distinct categories per gender, then compute the per-gender average transaction count as total_for_gender divided by num_categories_for_gender; STEP 4 - filter the (gender, category) pairs from STEP 1 keeping only those where the count is strictly greater than the gender average from STEP 3; STEP 5 - for each gender, find the category with the highest fraud rate among the filtered pairs from STEP 4; STEP 6 - build a list of [gender, category, round(fraud_rate, 6)] for each gender&#x27;s top category and sort it by fraud_rate descending. Return the final sorted list.</span>
+    <span class="q-text">Using the transactions list, perform the following steps in order: STEP 1 - for every transaction compute the Haversine distance in kilometres between the cardholder location (lat, long) and the merchant location (merch_lat, merch_long) using the formula: a = sin((phi2-phi1)/2)^2 + cos(phi1)*cos(phi2)*sin((lam2-lam1)/2)^2, distance_km = 2 * R * asin(sqrt(a)) where R=6371 and all angles are in radians (use math.radians, math.sin, math.cos, math.asin, math.sqrt); STEP 2 - assign each transaction to a distance band based on its distance_km: &#x27;0-10km&#x27; if distance_km &lt; 10, &#x27;10-50km&#x27; if 10 &lt;= distance_km &lt; 50, &#x27;50-200km&#x27; if 50 &lt;= distance_km &lt; 200, &#x27;200+km&#x27; if distance_km &gt;= 200; STEP 3 - group transactions by (category, distance_band) and for each group accumulate: total_count, fraud_count (sum of is_fraud), amt_sum (sum of amt); STEP 4 - keep only groups where total_count &gt;= 20, then for each kept group compute fraud_rate = fraud_count / total_count and avg_amt = amt_sum / total_count, rounding fraud_rate to 6 decimal places and avg_amt to 2 decimal places; STEP 5 - sort the kept groups by fraud_rate descending and take the top 3; STEP 6 - return the top 3 as a list of [category, distance_band, fraud_rate, total_count, avg_amt] sorted by fraud_rate descending.</span>
     <span class="badge badge-hard">hard</span>
     <span class="badge badge-ok">✓ PASSED</span>
     <span class="q-iters">1 iteration</span>
@@ -458,16 +458,27 @@
   <div class="q-body">
     <div class="answer-box ok"><strong>Answer:</strong> [
   [
-    &quot;M&quot;,
-    &quot;shopping_net&quot;,
-    0.536885
+    &quot;misc_net&quot;,
+    &quot;10-50km&quot;,
+    0.5,
+    66,
+    435.85
   ],
   [
-    &quot;F&quot;,
     &quot;grocery_pos&quot;,
-    0.365517
+    &quot;10-50km&quot;,
+    0.415929,
+    113,
+    189.28
+  ],
+  [
+    &quot;shopping_net&quot;,
+    &quot;50-200km&quot;,
+    0.414458,
+    415,
+    469.43
   ]
-]</div>
+] &nbsp; <span style='color:var(--gray-500);font-size:0.8rem'>(31.0ms)</span></div>
     
     <details class="iter-block iter-ok" open>
   <summary>
@@ -480,173 +491,155 @@
   
   
 </div>
-    <div class="dag-section"><div class="dag-description">This DAG performs a series of computations on the transactions dataset to determine the top category by fraud rate for each gender, filtered by average transaction count per gender.</div>
-<div class="dag-svg-wrap"><div class="dag-svg-title">DAG Structure</div><svg xmlns="http://www.w3.org/2000/svg" width="1378" height="216" style="max-width:100%;display:block;overflow:visible;">
+    <div class="dag-section"><div class="dag-description">Compute Haversine distance for each transaction, categorize into distance bands, group by category and distance band, filter and compute statistics, and return top 3 groups by fraud rate.</div>
+<div class="dag-svg-wrap"><div class="dag-svg-title">DAG Structure</div><svg xmlns="http://www.w3.org/2000/svg" width="1378" height="124" style="max-width:100%;display:block;overflow:visible;">
 <defs><marker id="dag-arrow" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#94a3b8"/></marker></defs>
-<path d="M234.0,108.0 C269.0,108.0 269.0,62.0 304.0,62.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
-<path d="M234.0,108.0 C269.0,108.0 269.0,154.0 304.0,154.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
-<path d="M234.0,108.0 C409.0,108.0 409.0,108.0 584.0,108.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
-<path d="M514.0,62.0 C689.0,62.0 689.0,108.0 864.0,108.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
-<path d="M514.0,154.0 C549.0,154.0 549.0,108.0 584.0,108.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
-<path d="M794.0,108.0 C829.0,108.0 829.0,108.0 864.0,108.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
-<path d="M1074.0,108.0 C1109.0,108.0 1109.0,108.0 1144.0,108.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
-<rect x="24" y="70" width="210" height="76" rx="6" ry="6" fill="white" stroke="#3b82f6" stroke-width="1.8"/>
-<rect x="24" y="70" width="210" height="22" rx="6" ry="6" fill="#3b82f6"/>
-<rect x="24" y="86" width="210" height="6" fill="#3b82f6"/>
-<text x="32" y="85" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_1</text>
-<text x="32" y="108" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Group transactions by (gende</text>
-<text x="32" y="122" font-family="system-ui,sans-serif" font-size="11" fill="#374151">r, category) and count tota…</text>
-<text x="32" y="140" font-family="monospace" font-size="10" fill="#3b82f6">Layer 0</text>
+<path d="M234.0,62.0 C269.0,62.0 269.0,62.0 304.0,62.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<path d="M514.0,62.0 C549.0,62.0 549.0,62.0 584.0,62.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<path d="M794.0,62.0 C829.0,62.0 829.0,62.0 864.0,62.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<path d="M1074.0,62.0 C1109.0,62.0 1109.0,62.0 1144.0,62.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<rect x="24" y="24" width="210" height="76" rx="6" ry="6" fill="white" stroke="#3b82f6" stroke-width="1.8"/>
+<rect x="24" y="24" width="210" height="22" rx="6" ry="6" fill="#3b82f6"/>
+<rect x="24" y="40" width="210" height="6" fill="#3b82f6"/>
+<text x="32" y="39" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_1a</text>
+<text x="32" y="62" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Compute Haversine distance f</text>
+<text x="32" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#374151">or each transaction</text>
+<text x="32" y="94" font-family="monospace" font-size="10" fill="#3b82f6">Layer 0</text>
 <rect x="304" y="24" width="210" height="76" rx="6" ry="6" fill="white" stroke="#0d9488" stroke-width="1.8"/>
 <rect x="304" y="24" width="210" height="22" rx="6" ry="6" fill="#0d9488"/>
 <rect x="304" y="40" width="210" height="6" fill="#0d9488"/>
-<text x="312" y="39" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_2</text>
-<text x="312" y="62" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Compute fraud rate for each </text>
-<text x="312" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#374151">(gender, category) pair.</text>
+<text x="312" y="39" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_2a</text>
+<text x="312" y="62" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Assign distance band to each</text>
+<text x="312" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#374151"> transaction</text>
 <text x="312" y="94" font-family="monospace" font-size="10" fill="#0d9488">Layer 1</text>
-<rect x="304" y="116" width="210" height="76" rx="6" ry="6" fill="white" stroke="#0d9488" stroke-width="1.8"/>
-<rect x="304" y="116" width="210" height="22" rx="6" ry="6" fill="#0d9488"/>
-<rect x="304" y="132" width="210" height="6" fill="#0d9488"/>
-<text x="312" y="131" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_3</text>
-<text x="312" y="154" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Compute total transaction co</text>
-<text x="312" y="168" font-family="system-ui,sans-serif" font-size="11" fill="#374151">unt and distinct categories…</text>
-<text x="312" y="186" font-family="monospace" font-size="10" fill="#0d9488">Layer 1</text>
-<rect x="584" y="70" width="210" height="76" rx="6" ry="6" fill="white" stroke="#7c3aed" stroke-width="1.8"/>
-<rect x="584" y="70" width="210" height="22" rx="6" ry="6" fill="#7c3aed"/>
-<rect x="584" y="86" width="210" height="6" fill="#7c3aed"/>
-<text x="592" y="85" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_4</text>
-<text x="592" y="108" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Filter (gender, category) pa</text>
-<text x="592" y="122" font-family="system-ui,sans-serif" font-size="11" fill="#374151">irs where count is greater …</text>
-<text x="592" y="140" font-family="monospace" font-size="10" fill="#7c3aed">Layer 2</text>
-<rect x="864" y="70" width="210" height="76" rx="6" ry="6" fill="white" stroke="#d97706" stroke-width="1.8"/>
-<rect x="864" y="70" width="210" height="22" rx="6" ry="6" fill="#d97706"/>
-<rect x="864" y="86" width="210" height="6" fill="#d97706"/>
-<text x="872" y="85" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_5</text>
-<text x="872" y="108" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Find the category with the h</text>
-<text x="872" y="122" font-family="system-ui,sans-serif" font-size="11" fill="#374151">ighest fraud rate for each …</text>
-<text x="872" y="140" font-family="monospace" font-size="10" fill="#d97706">Layer 3</text>
-<rect x="1144" y="70" width="210" height="76" rx="6" ry="6" fill="white" stroke="#dc2626" stroke-width="1.8"/>
-<rect x="1144" y="70" width="210" height="22" rx="6" ry="6" fill="#dc2626"/>
-<rect x="1144" y="86" width="210" height="6" fill="#dc2626"/>
-<text x="1152" y="85" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_6</text>
-<text x="1152" y="108" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Build and sort the final lis</text>
-<text x="1152" y="122" font-family="system-ui,sans-serif" font-size="11" fill="#374151">t of [gender, category, fra…</text>
-<text x="1152" y="140" font-family="monospace" font-size="10" fill="#dc2626">Layer 4</text>
+<rect x="584" y="24" width="210" height="76" rx="6" ry="6" fill="white" stroke="#7c3aed" stroke-width="1.8"/>
+<rect x="584" y="24" width="210" height="22" rx="6" ry="6" fill="#7c3aed"/>
+<rect x="584" y="40" width="210" height="6" fill="#7c3aed"/>
+<text x="592" y="39" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_3a</text>
+<text x="592" y="62" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Group transactions by (categ</text>
+<text x="592" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#374151">ory, distance_band) and acc…</text>
+<text x="592" y="94" font-family="monospace" font-size="10" fill="#7c3aed">Layer 2</text>
+<rect x="864" y="24" width="210" height="76" rx="6" ry="6" fill="white" stroke="#d97706" stroke-width="1.8"/>
+<rect x="864" y="24" width="210" height="22" rx="6" ry="6" fill="#d97706"/>
+<rect x="864" y="40" width="210" height="6" fill="#d97706"/>
+<text x="872" y="39" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_4a</text>
+<text x="872" y="62" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Filter groups with total_cou</text>
+<text x="872" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#374151">nt &gt;= 20 and compute fraud_…</text>
+<text x="872" y="94" font-family="monospace" font-size="10" fill="#d97706">Layer 3</text>
+<rect x="1144" y="24" width="210" height="76" rx="6" ry="6" fill="white" stroke="#dc2626" stroke-width="1.8"/>
+<rect x="1144" y="24" width="210" height="22" rx="6" ry="6" fill="#dc2626"/>
+<rect x="1144" y="40" width="210" height="6" fill="#dc2626"/>
+<text x="1152" y="39" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_5a</text>
+<text x="1152" y="62" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Sort groups by fraud_rate de</text>
+<text x="1152" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#374151">scending and take top 3</text>
+<text x="1152" y="94" font-family="monospace" font-size="10" fill="#dc2626">Layer 4</text>
 </svg></div>
 <div class="dag-node">
   <div class="dag-node-header">
-    <span class="node-id">step_1</span>
+    <span class="node-id">step_1a</span>
     <span class="badge badge-layer">Layer 0</span>
-    <span class="output-type">→ dict[tuple[str, str], dict[str, int]]</span>
+    <span class="output-type">→ list[dict]</span>
   </div>
-  <div class="dag-node-operation">Group transactions by (gender, category) and count total and fraud transactions.</div>
+  <div class="dag-node-operation">Compute Haversine distance for each transaction</div>
   <div class="dag-node-inputs">
   <strong>Inputs:</strong>
   <ul><li><code>transactions</code> ← <code>dataset.transactions</code></li></ul>
 </div>
-  <pre class="code-block"><code><span class="hl-kw">def</span> group_transactions_by_gender_category(transactions):
-    result = defaultdict(<span class="hl-kw">lambda</span>: {<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>: 0, <span <span class="hl-kw">class</span>="hl-st">&#x27;fraud_count&#x27;</span>: 0})
+  <pre class="code-block"><code><span class="hl-kw">def</span> compute_haversine_distance(transactions):
+    R = 6371  <span class="hl-cm"># Earth radius in kilometers</span>
+    result = []
     <span class="hl-kw">for</span> transaction <span class="hl-kw">in</span> transactions:
-        key = (transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;gender&#x27;</span>], transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;category&#x27;</span>])
-        result[key][<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] += 1
-        <span class="hl-kw">if</span> transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;is_fraud&#x27;</span>] == 1:
-            result[key][<span <span class="hl-kw">class</span>="hl-st">&#x27;fraud_count&#x27;</span>] += 1
+        lat1, lon1 = <span class="hl-bi">map</span>(math.radians, [transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;lat&#x27;</span>], transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;long&#x27;</span>]])
+        lat2, lon2 = <span class="hl-bi">map</span>(math.radians, [transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;merch_lat&#x27;</span>], transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;merch_long&#x27;</span>]])
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        distance_km = 2 * R * math.asin(math.sqrt(a))
+        transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;distance_km&#x27;</span>] = distance_km
+        result.append(transaction)
     <span class="hl-kw">return</span> result</code></pre>
 </div>
 <div class="dag-node">
   <div class="dag-node-header">
-    <span class="node-id">step_2</span>
+    <span class="node-id">step_2a</span>
     <span class="badge badge-layer">Layer 1</span>
-    <span class="output-type">→ dict[tuple[str, str], float]</span>
+    <span class="output-type">→ list[dict]</span>
   </div>
-  <div class="dag-node-operation">Compute fraud rate for each (gender, category) pair.</div>
+  <div class="dag-node-operation">Assign distance band to each transaction</div>
   <div class="dag-node-inputs">
   <strong>Inputs:</strong>
-  <ul><li><code>grouped_data</code> ← <code>prev_node.step_1.output</code></li></ul>
+  <ul><li><code>transactions</code> ← <code>prev_node.step_1a.output</code></li></ul>
 </div>
-  <pre class="code-block"><code><span class="hl-kw">def</span> compute_fraud_rate(grouped_data):
-    fraud_rates = {}
-    <span class="hl-kw">for</span> key, counts <span class="hl-kw">in</span> grouped_data.items():
-        fraud_rates[key] = counts[<span <span class="hl-kw">class</span>="hl-st">&#x27;fraud_count&#x27;</span>] / counts[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] <span class="hl-kw">if</span> counts[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] &gt; 0 <span class="hl-kw">else</span> 0
-    <span class="hl-kw">return</span> fraud_rates</code></pre>
+  <pre class="code-block"><code><span class="hl-kw">def</span> assign_distance_band(transactions):
+    <span class="hl-kw">for</span> transaction <span class="hl-kw">in</span> transactions:
+        distance_km = transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;distance_km&#x27;</span>]
+        <span class="hl-kw">if</span> distance_km &lt; 10:
+            transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;distance_band&#x27;</span>] = <span <span class="hl-kw">class</span>="hl-st">&#x27;0-10km&#x27;</span>
+        <span class="hl-kw">elif</span> distance_km &lt; 50:
+            transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;distance_band&#x27;</span>] = <span <span class="hl-kw">class</span>="hl-st">&#x27;10-50km&#x27;</span>
+        <span class="hl-kw">elif</span> distance_km &lt; 200:
+            transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;distance_band&#x27;</span>] = <span <span class="hl-kw">class</span>="hl-st">&#x27;50-200km&#x27;</span>
+        <span class="hl-kw">else</span>:
+            transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;distance_band&#x27;</span>] = <span <span class="hl-kw">class</span>="hl-st">&#x27;200+km&#x27;</span>
+    <span class="hl-kw">return</span> transactions</code></pre>
 </div>
 <div class="dag-node">
   <div class="dag-node-header">
-    <span class="node-id">step_3</span>
-    <span class="badge badge-layer">Layer 1</span>
-    <span class="output-type">→ dict[str, float]</span>
-  </div>
-  <div class="dag-node-operation">Compute total transaction count and distinct categories per gender, then compute average transaction count per gender.</div>
-  <div class="dag-node-inputs">
-  <strong>Inputs:</strong>
-  <ul><li><code>grouped_data</code> ← <code>prev_node.step_1.output</code></li></ul>
-</div>
-  <pre class="code-block"><code><span class="hl-kw">def</span> compute_gender_averages(grouped_data):
-    gender_totals = defaultdict(<span class="hl-kw">lambda</span>: {<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>: 0, <span <span class="hl-kw">class</span>="hl-st">&#x27;categories&#x27;</span>: <span class="hl-bi">set</span>()})
-    <span class="hl-kw">for</span> (gender, category), counts <span class="hl-kw">in</span> grouped_data.items():
-        gender_totals[gender][<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] += counts[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>]
-        gender_totals[gender][<span <span class="hl-kw">class</span>="hl-st">&#x27;categories&#x27;</span>].add(category)
-    gender_averages = {}
-    <span class="hl-kw">for</span> gender, data <span class="hl-kw">in</span> gender_totals.items():
-        num_categories = <span class="hl-bi">len</span>(data[<span <span class="hl-kw">class</span>="hl-st">&#x27;categories&#x27;</span>])
-        gender_averages[gender] = data[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] / num_categories <span class="hl-kw">if</span> num_categories &gt; 0 <span class="hl-kw">else</span> 0
-    <span class="hl-kw">return</span> gender_averages</code></pre>
-</div>
-<div class="dag-node">
-  <div class="dag-node-header">
-    <span class="node-id">step_4</span>
+    <span class="node-id">step_3a</span>
     <span class="badge badge-layer">Layer 2</span>
-    <span class="output-type">→ dict[tuple[str, str], dict[str, int]]</span>
+    <span class="output-type">→ dict[tuple, dict]</span>
   </div>
-  <div class="dag-node-operation">Filter (gender, category) pairs where count is greater than gender average.</div>
+  <div class="dag-node-operation">Group transactions by (category, distance_band) and accumulate statistics</div>
   <div class="dag-node-inputs">
   <strong>Inputs:</strong>
-  <ul><li><code>grouped_data</code> ← <code>prev_node.step_1.output</code></li><li><code>gender_averages</code> ← <code>prev_node.step_3.output</code></li></ul>
+  <ul><li><code>transactions</code> ← <code>prev_node.step_2a.output</code></li></ul>
 </div>
-  <pre class="code-block"><code><span class="hl-kw">def</span> filter_by_gender_average(grouped_data, gender_averages):
-    filtered_data = {}
-    <span class="hl-kw">for</span> key, counts <span class="hl-kw">in</span> grouped_data.items():
-        gender = key[0]
-        <span class="hl-kw">if</span> counts[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] &gt; gender_averages[gender]:
-            filtered_data[key] = counts
-    <span class="hl-kw">return</span> filtered_data</code></pre>
+  <pre class="code-block"><code><span class="hl-kw">def</span> group_and_accumulate(transactions):
+    grouped_data = defaultdict(<span class="hl-kw">lambda</span>: {<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>: 0, <span <span class="hl-kw">class</span>="hl-st">&#x27;fraud_count&#x27;</span>: 0, <span <span class="hl-kw">class</span>="hl-st">&#x27;amt_sum&#x27;</span>: 0.0})
+    <span class="hl-kw">for</span> transaction <span class="hl-kw">in</span> transactions:
+        key = (transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;category&#x27;</span>], transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;distance_band&#x27;</span>])
+        grouped_data[key][<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] += 1
+        grouped_data[key][<span <span class="hl-kw">class</span>="hl-st">&#x27;fraud_count&#x27;</span>] += transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;is_fraud&#x27;</span>]
+        grouped_data[key][<span <span class="hl-kw">class</span>="hl-st">&#x27;amt_sum&#x27;</span>] += transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;amt&#x27;</span>]
+    <span class="hl-kw">return</span> grouped_data</code></pre>
 </div>
 <div class="dag-node">
   <div class="dag-node-header">
-    <span class="node-id">step_5</span>
+    <span class="node-id">step_4a</span>
     <span class="badge badge-layer">Layer 3</span>
-    <span class="output-type">→ dict[str, tuple[str, float]]</span>
+    <span class="output-type">→ list[tuple]</span>
   </div>
-  <div class="dag-node-operation">Find the category with the highest fraud rate for each gender among filtered pairs.</div>
+  <div class="dag-node-operation">Filter groups with total_count &gt;= 20 and compute fraud_rate and avg_amt</div>
   <div class="dag-node-inputs">
   <strong>Inputs:</strong>
-  <ul><li><code>filtered_data</code> ← <code>prev_node.step_4.output</code></li><li><code>fraud_rates</code> ← <code>prev_node.step_2.output</code></li></ul>
+  <ul><li><code>grouped_data</code> ← <code>prev_node.step_3a.output</code></li></ul>
 </div>
-  <pre class="code-block"><code><span class="hl-kw">def</span> find_top_category_by_fraud_rate(filtered_data, fraud_rates):
-    top_categories = {}
-    <span class="hl-kw">for</span> (gender, category), counts <span class="hl-kw">in</span> filtered_data.items():
-        fraud_rate = fraud_rates[(gender, category)]
-        <span class="hl-kw">if</span> gender <span class="hl-kw">not</span> <span class="hl-kw">in</span> top_categories <span class="hl-kw">or</span> fraud_rate &gt; top_categories[gender][1]:
-            top_categories[gender] = (category, fraud_rate)
-    <span class="hl-kw">return</span> top_categories</code></pre>
+  <pre class="code-block"><code><span class="hl-kw">def</span> filter_and_compute_statistics(grouped_data):
+    result = []
+    <span class="hl-kw">for</span> (category, distance_band), data <span class="hl-kw">in</span> grouped_data.items():
+        <span class="hl-kw">if</span> data[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] &gt;= 20:
+            fraud_rate = <span class="hl-bi">round</span>(data[<span <span class="hl-kw">class</span>="hl-st">&#x27;fraud_count&#x27;</span>] / data[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>], 6)
+            avg_amt = <span class="hl-bi">round</span>(data[<span <span class="hl-kw">class</span>="hl-st">&#x27;amt_sum&#x27;</span>] / data[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>], 2)
+            result.append((category, distance_band, fraud_rate, data[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>], avg_amt))
+    <span class="hl-kw">return</span> result</code></pre>
 </div>
 <div class="dag-node">
   <div class="dag-node-header">
-    <span class="node-id">step_6</span>
+    <span class="node-id">step_5a</span>
     <span class="badge badge-layer">Layer 4</span>
-    <span class="output-type">→ list[list]</span>
+    <span class="output-type">→ list[tuple]</span>
   </div>
-  <div class="dag-node-operation">Build and sort the final list of [gender, category, fraud_rate].</div>
+  <div class="dag-node-operation">Sort groups by fraud_rate descending and take top 3</div>
   <div class="dag-node-inputs">
   <strong>Inputs:</strong>
-  <ul><li><code>top_categories</code> ← <code>prev_node.step_5.output</code></li></ul>
+  <ul><li><code>filtered_groups</code> ← <code>prev_node.step_4a.output</code></li></ul>
 </div>
-  <pre class="code-block"><code><span class="hl-kw">def</span> build_and_sort_final_list(top_categories):
-    result = [[gender, category, <span class="hl-bi">round</span>(fraud_rate, 6)] <span class="hl-kw">for</span> gender, (category, fraud_rate) <span class="hl-kw">in</span> top_categories.items()]
-    <span class="hl-kw">return</span> <span class="hl-bi">sorted</span>(result, key=<span class="hl-kw">lambda</span> x: x[2], reverse=<span class="hl-kw">True</span>)</code></pre>
+  <pre class="code-block"><code><span class="hl-kw">def</span> sort_and_select_top_3(filtered_groups):
+    sorted_groups = <span class="hl-bi">sorted</span>(filtered_groups, key=<span class="hl-kw">lambda</span> x: x[2], reverse=<span class="hl-kw">True</span>)
+    <span class="hl-kw">return</span> sorted_groups[:3]</code></pre>
 </div>
-<div class="edges-row"><span class="edge-item">step_1 → step_2</span><span class="edge-item">step_1 → step_3</span><span class="edge-item">step_1 → step_4</span><span class="edge-item">step_2 → step_5</span><span class="edge-item">step_3 → step_4</span><span class="edge-item">step_4 → step_5</span><span class="edge-item">step_5 → step_6</span></div>
-<div class="final-node-label">Final Answer Node: <code>step_6</code></div></div>
+<div class="edges-row"><span class="edge-item">step_1a → step_2a</span><span class="edge-item">step_2a → step_3a</span><span class="edge-item">step_3a → step_4a</span><span class="edge-item">step_4a → step_5a</span></div>
+<div class="final-node-label">Final Answer Node: <code>step_5a</code></div></div>
   </div>
 </details>
     <div class="outputs-section">
@@ -654,197 +647,738 @@
   <table class="outputs-table">
     <thead><tr><th>Node</th><th>Output</th></tr></thead>
     <tbody><tr>
-  <td>step_1</td>
+  <td>step_1a</td>
+  <td><pre>[
+  {
+    &quot;trans_date_trans_time&quot;: &quot;01-05-2019 13:53&quot;,
+    &quot;cc_num&quot;: &quot;4585130000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Fadel-Hilpert&quot;,
+    &quot;category&quot;: &quot;health_fitness&quot;,
+    &quot;amt&quot;: 13.73,
+    &quot;first&quot;: &quot;Karen&quot;,
+    &quot;last&quot;: &quot;Gordon&quot;,
+    &quot;gender&quot;: &quot;F&quot;,
+    &quot;city&quot;: &quot;Utica&quot;,
+    &quot;state&quot;: &quot;MO&quot;,
+    &quot;zip&quot;: &quot;64686&quot;,
+    &quot;lat&quot;: 39.7417,
+    &quot;long&quot;: -93.6289,
+    &quot;city_pop&quot;: 271,
+    &quot;job&quot;: &quot;Land/geomatics surveyor&quot;,
+    &quot;dob&quot;: &quot;18-04-1972&quot;,
+    &quot;trans_num&quot;: &quot;141c2a6cddba22f3defbf9f812f3abdc&quot;,
+    &quot;unix_time&quot;: 1335880406,
+    &quot;merch_lat&quot;: 39.571624,
+    &quot;merch_long&quot;: -93.837554,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;64624.0&quot;,
+    &quot;distance_km&quot;: 26.013597229321498,
+    &quot;distance_band&quot;: &quot;10-50km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;12-01-2019 01:22&quot;,
+    &quot;cc_num&quot;: &quot;4777070000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Padberg-Welch&quot;,
+    &quot;category&quot;: &quot;grocery_pos&quot;,
+    &quot;amt&quot;: 90.42,
+    &quot;first&quot;: &quot;Peter&quot;,
+    &quot;last&quot;: &quot;Caldwell&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Oaks&quot;,
+    &quot;state&quot;: &quot;PA&quot;,
+    &quot;zip&quot;: &quot;19456&quot;,
+    &quot;lat&quot;: 40.1334,
+    &quot;long&quot;: -75.4536,
+    &quot;city_pop&quot;: 737,
+    &quot;job&quot;: &quot;Oceanographer&quot;,
+    &quot;dob&quot;: &quot;24-04-1987&quot;,
+    &quot;trans_num&quot;: &quot;a5c91a15a293067cbb32b267c935ab49&quot;,
+    &quot;unix_time&quot;: 1326331341,
+    &quot;merch_lat&quot;: 40.958897,
+    &quot;merch_long&quot;: -75.076606,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;7832.0&quot;,
+    &quot;distance_km&quot;: 97.16085043414986,
+    &quot;distance_band&quot;: &quot;50-200km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;05-05-2019 19:04&quot;,
+    &quot;cc_num&quot;: &quot;4178100000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Langworth LLC&quot;,
+    &quot;category&quot;: &quot;personal_care&quot;,
+    &quot;amt&quot;: 100.68,
+    &quot;first&quot;: &quot;Jill&quot;,
+    &quot;last&quot;: &quot;Flores&quot;,
+    &quot;gender&quot;: &quot;F&quot;,
+    &quot;city&quot;: &quot;Baroda&quot;,
+    &quot;state&quot;: &quot;MI&quot;,
+    &quot;zip&quot;: &quot;49101&quot;,
+    &quot;lat&quot;: 41.9488,
+    &quot;long&quot;: -86.4913,
+    &quot;city_pop&quot;: 3104,
+    &quot;job&quot;: &quot;Horticulturist, commercial&quot;,
+    &quot;dob&quot;: &quot;29-03-1981&quot;,
+    &quot;trans_num&quot;: &quot;5956f0e95bcb3bee690131e5593c0fb9&quot;,
+    &quot;unix_time&quot;: 1336244642,
+    &quot;merch_lat&quot;: 41.01468,
+    &quot;merch_long&quot;: -85.66665,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;46787.0&quot;,
+    &quot;distance_km&quot;: 124.52969979082017,
+    &quot;distance_band&quot;: &quot;50-200km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;04-10-2019 17:41&quot;,
+    &quot;cc_num&quot;: &quot;379141000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Schoen, Nienow and Bauch&quot;,
+    &quot;category&quot;: &quot;personal_care&quot;,
+    &quot;amt&quot;: 36.18,
+    &quot;first&quot;: &quot;Gerald&quot;,
+    &quot;last&quot;: &quot;Anthony&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Monetta&quot;,
+    &quot;state&quot;: &quot;SC&quot;,
+    &quot;zip&quot;: &quot;29105&quot;,
+    &quot;lat&quot;: 33.8084,
+    &quot;long&quot;: -81.5956,
+    &quot;city_pop&quot;: 1514,
+    &quot;job&quot;: &quot;Chief Strategy Officer&quot;,
+    &quot;dob&quot;: &quot;15-12-1966&quot;,
+    &quot;trans_num&quot;: &quot;cef0948db3aa85e0cb6ee05f942802f6&quot;,
+    &quot;unix_time&quot;: 1349372476,
+    &quot;merch_lat&quot;: 32.948689,
+    &quot;merch_long&quot;: -80.755234,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;29475.0&quot;,
+    &quot;distance_km&quot;: 123.39798776499151,
+    &quot;distance_band&quot;: &quot;50-200km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;13-01-2019 00:49&quot;,
+    &quot;cc_num&quot;: &quot;180031000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Hermann and Sons&quot;,
+    &quot;category&quot;: &quot;shopping_pos&quot;,
+    &quot;amt&quot;: 952.08,
+    &quot;first&quot;: &quot;Becky&quot;,
+    &quot;last&quot;: &quot;Mckinney&quot;,
+    &quot;gender&quot;: &quot;F&quot;,
+    &quot;city&quot;: &quot;Mobile&quot;,
+    &quot;state&quot;: &quot;AL&quot;,
+    &quot;zip&quot;: &quot;36617&quot;,
+    &quot;lat&quot;: 30.7145,
+    &quot;long&quot;: -88.0918,
+    &quot;city_pop&quot;: 270712,
+    &quot;job&quot;: &quot;Surveyor, land/geomatics&quot;,
+    &quot;dob&quot;: &quot;05-01-1972&quot;,
+    &quot;trans_num&quot;: &quot;7eb9b1814acf9db55a170d8d9e5497ee&quot;,
+    &quot;unix_time&quot;: 1326415744,
+    &quot;merch_lat&quot;: 30.803533,
+    &quot;merch_long&quot;: -88.140115,
+    &quot;is_fraud&quot;: 1,
+    &quot;merch_zipcode&quot;: &quot;36613.0&quot;,
+    &quot;distance_km&quot;: 10.923534186416232,
+    &quot;distance_band&quot;: &quot;10-50km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;25-08-2019 22:03&quot;,
+    &quot;cc_num&quot;: &quot;4128030000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Towne, Greenholt and Koepp&quot;,
+    &quot;category&quot;: &quot;shopping_net&quot;,
+    &quot;amt&quot;: 1170.79,
+    &quot;first&quot;: &quot;Kyle&quot;,
+    &quot;last&quot;: &quot;Park&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Mount Perry&quot;,
+    &quot;state&quot;: &quot;OH&quot;,
+    &quot;zip&quot;: &quot;43760&quot;,
+    &quot;lat&quot;: 39.8788,
+    &quot;long&quot;: -82.188,
+    &quot;city_pop&quot;: 1831,
+    &quot;job&quot;: &quot;Barrister&#x27;s clerk&quot;,
+    &quot;dob&quot;: &quot;18-10-1953&quot;,
+    &quot;trans_num&quot;: &quot;e72bd8d705e7f6d883734eec6fe8735a&quot;,
+    &quot;unix_time&quot;: 1345932213,
+    &quot;merch_lat&quot;: 40.695312,
+    &quot;merch_long&quot;: -81.220764,
+    &quot;is_fraud&quot;: 1,
+    &quot;merch_zipcode&quot;: &quot;44644.0&quot;,
+    &quot;distance_km&quot;: 122.36687428452254,
+    &quot;distance_band&quot;: &quot;50-200km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;28-04-2019 22:07&quot;,
+    &quot;cc_num&quot;: &quot;30371000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Huel, Hammes and Witting&quot;,
+    &quot;category&quot;: &quot;grocery_pos&quot;,
+    &quot;amt&quot;: 348.41,
+    &quot;first&quot;: &quot;Robert&quot;,
+    &quot;last&quot;: &quot;James&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Tamaroa&quot;,
+    &quot;state&quot;: &quot;IL&quot;,
+    &quot;zip&quot;: &quot;62888&quot;,
+    &quot;lat&quot;: 38.138,
+    &quot;long&quot;: -89.2231,
+    &quot;city_pop&quot;: 2135,
+    &quot;job&quot;: &quot;Development worker, community&quot;,
+    &quot;dob&quot;: &quot;31-01-1961&quot;,
+    &quot;trans_num&quot;: &quot;149e59d9c5aac7b21310dd13b48789a8&quot;,
+    &quot;unix_time&quot;: 1335650847,
+    &quot;merch_lat&quot;: 38.162793,
+    &quot;merch_long&quot;: -89.351823,
+    &quot;is_fraud&quot;: 1,
+    &quot;merch_zipcode&quot;: &quot;62274.0&quot;,
+    &quot;distance_km&quot;: 11.588593487782179,
+    &quot;distance_band&quot;: &quot;10-50km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;10-03-2020 01:41&quot;,
+    &quot;cc_num&quot;: &quot;5596350000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Daugherty, Pouros and Beahan&quot;,
+    &quot;category&quot;: &quot;shopping_pos&quot;,
+    &quot;amt&quot;: 71.84,
+    &quot;first&quot;: &quot;Joseph&quot;,
+    &quot;last&quot;: &quot;Moody&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Kenner&quot;,
+    &quot;state&quot;: &quot;LA&quot;,
+    &quot;zip&quot;: &quot;70062&quot;,
+    &quot;lat&quot;: 29.9912,
+    &quot;long&quot;: -90.2479,
+    &quot;city_pop&quot;: 68211,
+    &quot;job&quot;: &quot;Engineer, petroleum&quot;,
+    &quot;dob&quot;: &quot;23-04-1941&quot;,
+    &quot;trans_num&quot;: &quot;35869ae2d6198f227ccd37f2b8116491&quot;,
+    &quot;unix_time&quot;: 1362879662,
+    &quot;merch_lat&quot;: 30.264585,
+    &quot;merch_long&quot;: -89.971485,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;70445.0&quot;,
+    &quot;distance_km&quot;: 40.38307701368193,
+    &quot;distance_band&quot;: &quot;10-50km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;12-10-2019 16:56&quot;,
+    &quot;cc_num&quot;: &quot;4220350000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Bode-Rempel&quot;,
+    &quot;category&quot;: &quot;kids_pets&quot;,
+    &quot;amt&quot;: 83.18,
+    &quot;first&quot;: &quot;Patrick&quot;,
+    &quot;last&quot;: &quot;Torres&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Oxford&quot;,
+    &quot;state&quot;: &quot;MI&quot;,
+    &quot;zip&quot;: &quot;48371&quot;,
+    &quot;lat&quot;: 42.8223,
+    &quot;long&quot;: -83.2829,
+    &quot;city_pop&quot;: 24840,
+    &quot;job&quot;: &quot;Agricultural consultant&quot;,
+    &quot;dob&quot;: &quot;20-01-1960&quot;,
+    &quot;trans_num&quot;: &quot;aa8e752d519b298085787e341b08c093&quot;,
+    &quot;unix_time&quot;: 1350061009,
+    &quot;merch_lat&quot;: 42.42825,
+    &quot;merch_long&quot;: -83.761996,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;48189.0&quot;,
+    &quot;distance_km&quot;: 58.79071824330335,
+    &quot;distance_band&quot;: &quot;50-200km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;21-06-2019 07:05&quot;,
+    &quot;cc_num&quot;: &quot;4.22371e+18&quot;,
+    &quot;merchant&quot;: &quot;fraud_Padberg-Welch&quot;,
+    &quot;category&quot;: &quot;grocery_pos&quot;,
+    &quot;amt&quot;: 109.08,
+    &quot;first&quot;: &quot;Adam&quot;,
+    &quot;last&quot;: &quot;Riddle&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Mount Saint Joseph&quot;,
+    &quot;state&quot;: &quot;OH&quot;,
+    &quot;zip&quot;: &quot;45051&quot;,
+    &quot;lat&quot;: 39.0965,
+    &quot;long&quot;: -84.6431,
+    &quot;city_pop&quot;: 177,
+    &quot;job&quot;: &quot;Exhibition designer&quot;,
+    &quot;dob&quot;: &quot;30-05-1974&quot;,
+    &quot;trans_num&quot;: &quot;269ccb4cd0f1233c86f735b113ec7a0f&quot;,
+    &quot;unix_time&quot;: 1340262327,
+    &quot;merch_lat&quot;: 39.071911,
+    &quot;merch_long&quot;: -84.604047,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;45238.0&quot;,
+    &quot;distance_km&quot;: 4.3402230406535365,
+    &quot;distance_band&quot;: &quot;0-10km&quot;
+  }
+]
+... (5000 total items)</pre></td>
+</tr><tr>
+  <td>step_2a</td>
+  <td><pre>[
+  {
+    &quot;trans_date_trans_time&quot;: &quot;01-05-2019 13:53&quot;,
+    &quot;cc_num&quot;: &quot;4585130000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Fadel-Hilpert&quot;,
+    &quot;category&quot;: &quot;health_fitness&quot;,
+    &quot;amt&quot;: 13.73,
+    &quot;first&quot;: &quot;Karen&quot;,
+    &quot;last&quot;: &quot;Gordon&quot;,
+    &quot;gender&quot;: &quot;F&quot;,
+    &quot;city&quot;: &quot;Utica&quot;,
+    &quot;state&quot;: &quot;MO&quot;,
+    &quot;zip&quot;: &quot;64686&quot;,
+    &quot;lat&quot;: 39.7417,
+    &quot;long&quot;: -93.6289,
+    &quot;city_pop&quot;: 271,
+    &quot;job&quot;: &quot;Land/geomatics surveyor&quot;,
+    &quot;dob&quot;: &quot;18-04-1972&quot;,
+    &quot;trans_num&quot;: &quot;141c2a6cddba22f3defbf9f812f3abdc&quot;,
+    &quot;unix_time&quot;: 1335880406,
+    &quot;merch_lat&quot;: 39.571624,
+    &quot;merch_long&quot;: -93.837554,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;64624.0&quot;,
+    &quot;distance_km&quot;: 26.013597229321498,
+    &quot;distance_band&quot;: &quot;10-50km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;12-01-2019 01:22&quot;,
+    &quot;cc_num&quot;: &quot;4777070000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Padberg-Welch&quot;,
+    &quot;category&quot;: &quot;grocery_pos&quot;,
+    &quot;amt&quot;: 90.42,
+    &quot;first&quot;: &quot;Peter&quot;,
+    &quot;last&quot;: &quot;Caldwell&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Oaks&quot;,
+    &quot;state&quot;: &quot;PA&quot;,
+    &quot;zip&quot;: &quot;19456&quot;,
+    &quot;lat&quot;: 40.1334,
+    &quot;long&quot;: -75.4536,
+    &quot;city_pop&quot;: 737,
+    &quot;job&quot;: &quot;Oceanographer&quot;,
+    &quot;dob&quot;: &quot;24-04-1987&quot;,
+    &quot;trans_num&quot;: &quot;a5c91a15a293067cbb32b267c935ab49&quot;,
+    &quot;unix_time&quot;: 1326331341,
+    &quot;merch_lat&quot;: 40.958897,
+    &quot;merch_long&quot;: -75.076606,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;7832.0&quot;,
+    &quot;distance_km&quot;: 97.16085043414986,
+    &quot;distance_band&quot;: &quot;50-200km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;05-05-2019 19:04&quot;,
+    &quot;cc_num&quot;: &quot;4178100000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Langworth LLC&quot;,
+    &quot;category&quot;: &quot;personal_care&quot;,
+    &quot;amt&quot;: 100.68,
+    &quot;first&quot;: &quot;Jill&quot;,
+    &quot;last&quot;: &quot;Flores&quot;,
+    &quot;gender&quot;: &quot;F&quot;,
+    &quot;city&quot;: &quot;Baroda&quot;,
+    &quot;state&quot;: &quot;MI&quot;,
+    &quot;zip&quot;: &quot;49101&quot;,
+    &quot;lat&quot;: 41.9488,
+    &quot;long&quot;: -86.4913,
+    &quot;city_pop&quot;: 3104,
+    &quot;job&quot;: &quot;Horticulturist, commercial&quot;,
+    &quot;dob&quot;: &quot;29-03-1981&quot;,
+    &quot;trans_num&quot;: &quot;5956f0e95bcb3bee690131e5593c0fb9&quot;,
+    &quot;unix_time&quot;: 1336244642,
+    &quot;merch_lat&quot;: 41.01468,
+    &quot;merch_long&quot;: -85.66665,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;46787.0&quot;,
+    &quot;distance_km&quot;: 124.52969979082017,
+    &quot;distance_band&quot;: &quot;50-200km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;04-10-2019 17:41&quot;,
+    &quot;cc_num&quot;: &quot;379141000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Schoen, Nienow and Bauch&quot;,
+    &quot;category&quot;: &quot;personal_care&quot;,
+    &quot;amt&quot;: 36.18,
+    &quot;first&quot;: &quot;Gerald&quot;,
+    &quot;last&quot;: &quot;Anthony&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Monetta&quot;,
+    &quot;state&quot;: &quot;SC&quot;,
+    &quot;zip&quot;: &quot;29105&quot;,
+    &quot;lat&quot;: 33.8084,
+    &quot;long&quot;: -81.5956,
+    &quot;city_pop&quot;: 1514,
+    &quot;job&quot;: &quot;Chief Strategy Officer&quot;,
+    &quot;dob&quot;: &quot;15-12-1966&quot;,
+    &quot;trans_num&quot;: &quot;cef0948db3aa85e0cb6ee05f942802f6&quot;,
+    &quot;unix_time&quot;: 1349372476,
+    &quot;merch_lat&quot;: 32.948689,
+    &quot;merch_long&quot;: -80.755234,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;29475.0&quot;,
+    &quot;distance_km&quot;: 123.39798776499151,
+    &quot;distance_band&quot;: &quot;50-200km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;13-01-2019 00:49&quot;,
+    &quot;cc_num&quot;: &quot;180031000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Hermann and Sons&quot;,
+    &quot;category&quot;: &quot;shopping_pos&quot;,
+    &quot;amt&quot;: 952.08,
+    &quot;first&quot;: &quot;Becky&quot;,
+    &quot;last&quot;: &quot;Mckinney&quot;,
+    &quot;gender&quot;: &quot;F&quot;,
+    &quot;city&quot;: &quot;Mobile&quot;,
+    &quot;state&quot;: &quot;AL&quot;,
+    &quot;zip&quot;: &quot;36617&quot;,
+    &quot;lat&quot;: 30.7145,
+    &quot;long&quot;: -88.0918,
+    &quot;city_pop&quot;: 270712,
+    &quot;job&quot;: &quot;Surveyor, land/geomatics&quot;,
+    &quot;dob&quot;: &quot;05-01-1972&quot;,
+    &quot;trans_num&quot;: &quot;7eb9b1814acf9db55a170d8d9e5497ee&quot;,
+    &quot;unix_time&quot;: 1326415744,
+    &quot;merch_lat&quot;: 30.803533,
+    &quot;merch_long&quot;: -88.140115,
+    &quot;is_fraud&quot;: 1,
+    &quot;merch_zipcode&quot;: &quot;36613.0&quot;,
+    &quot;distance_km&quot;: 10.923534186416232,
+    &quot;distance_band&quot;: &quot;10-50km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;25-08-2019 22:03&quot;,
+    &quot;cc_num&quot;: &quot;4128030000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Towne, Greenholt and Koepp&quot;,
+    &quot;category&quot;: &quot;shopping_net&quot;,
+    &quot;amt&quot;: 1170.79,
+    &quot;first&quot;: &quot;Kyle&quot;,
+    &quot;last&quot;: &quot;Park&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Mount Perry&quot;,
+    &quot;state&quot;: &quot;OH&quot;,
+    &quot;zip&quot;: &quot;43760&quot;,
+    &quot;lat&quot;: 39.8788,
+    &quot;long&quot;: -82.188,
+    &quot;city_pop&quot;: 1831,
+    &quot;job&quot;: &quot;Barrister&#x27;s clerk&quot;,
+    &quot;dob&quot;: &quot;18-10-1953&quot;,
+    &quot;trans_num&quot;: &quot;e72bd8d705e7f6d883734eec6fe8735a&quot;,
+    &quot;unix_time&quot;: 1345932213,
+    &quot;merch_lat&quot;: 40.695312,
+    &quot;merch_long&quot;: -81.220764,
+    &quot;is_fraud&quot;: 1,
+    &quot;merch_zipcode&quot;: &quot;44644.0&quot;,
+    &quot;distance_km&quot;: 122.36687428452254,
+    &quot;distance_band&quot;: &quot;50-200km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;28-04-2019 22:07&quot;,
+    &quot;cc_num&quot;: &quot;30371000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Huel, Hammes and Witting&quot;,
+    &quot;category&quot;: &quot;grocery_pos&quot;,
+    &quot;amt&quot;: 348.41,
+    &quot;first&quot;: &quot;Robert&quot;,
+    &quot;last&quot;: &quot;James&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Tamaroa&quot;,
+    &quot;state&quot;: &quot;IL&quot;,
+    &quot;zip&quot;: &quot;62888&quot;,
+    &quot;lat&quot;: 38.138,
+    &quot;long&quot;: -89.2231,
+    &quot;city_pop&quot;: 2135,
+    &quot;job&quot;: &quot;Development worker, community&quot;,
+    &quot;dob&quot;: &quot;31-01-1961&quot;,
+    &quot;trans_num&quot;: &quot;149e59d9c5aac7b21310dd13b48789a8&quot;,
+    &quot;unix_time&quot;: 1335650847,
+    &quot;merch_lat&quot;: 38.162793,
+    &quot;merch_long&quot;: -89.351823,
+    &quot;is_fraud&quot;: 1,
+    &quot;merch_zipcode&quot;: &quot;62274.0&quot;,
+    &quot;distance_km&quot;: 11.588593487782179,
+    &quot;distance_band&quot;: &quot;10-50km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;10-03-2020 01:41&quot;,
+    &quot;cc_num&quot;: &quot;5596350000000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Daugherty, Pouros and Beahan&quot;,
+    &quot;category&quot;: &quot;shopping_pos&quot;,
+    &quot;amt&quot;: 71.84,
+    &quot;first&quot;: &quot;Joseph&quot;,
+    &quot;last&quot;: &quot;Moody&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Kenner&quot;,
+    &quot;state&quot;: &quot;LA&quot;,
+    &quot;zip&quot;: &quot;70062&quot;,
+    &quot;lat&quot;: 29.9912,
+    &quot;long&quot;: -90.2479,
+    &quot;city_pop&quot;: 68211,
+    &quot;job&quot;: &quot;Engineer, petroleum&quot;,
+    &quot;dob&quot;: &quot;23-04-1941&quot;,
+    &quot;trans_num&quot;: &quot;35869ae2d6198f227ccd37f2b8116491&quot;,
+    &quot;unix_time&quot;: 1362879662,
+    &quot;merch_lat&quot;: 30.264585,
+    &quot;merch_long&quot;: -89.971485,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;70445.0&quot;,
+    &quot;distance_km&quot;: 40.38307701368193,
+    &quot;distance_band&quot;: &quot;10-50km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;12-10-2019 16:56&quot;,
+    &quot;cc_num&quot;: &quot;4220350000000.0&quot;,
+    &quot;merchant&quot;: &quot;fraud_Bode-Rempel&quot;,
+    &quot;category&quot;: &quot;kids_pets&quot;,
+    &quot;amt&quot;: 83.18,
+    &quot;first&quot;: &quot;Patrick&quot;,
+    &quot;last&quot;: &quot;Torres&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Oxford&quot;,
+    &quot;state&quot;: &quot;MI&quot;,
+    &quot;zip&quot;: &quot;48371&quot;,
+    &quot;lat&quot;: 42.8223,
+    &quot;long&quot;: -83.2829,
+    &quot;city_pop&quot;: 24840,
+    &quot;job&quot;: &quot;Agricultural consultant&quot;,
+    &quot;dob&quot;: &quot;20-01-1960&quot;,
+    &quot;trans_num&quot;: &quot;aa8e752d519b298085787e341b08c093&quot;,
+    &quot;unix_time&quot;: 1350061009,
+    &quot;merch_lat&quot;: 42.42825,
+    &quot;merch_long&quot;: -83.761996,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;48189.0&quot;,
+    &quot;distance_km&quot;: 58.79071824330335,
+    &quot;distance_band&quot;: &quot;50-200km&quot;
+  },
+  {
+    &quot;trans_date_trans_time&quot;: &quot;21-06-2019 07:05&quot;,
+    &quot;cc_num&quot;: &quot;4.22371e+18&quot;,
+    &quot;merchant&quot;: &quot;fraud_Padberg-Welch&quot;,
+    &quot;category&quot;: &quot;grocery_pos&quot;,
+    &quot;amt&quot;: 109.08,
+    &quot;first&quot;: &quot;Adam&quot;,
+    &quot;last&quot;: &quot;Riddle&quot;,
+    &quot;gender&quot;: &quot;M&quot;,
+    &quot;city&quot;: &quot;Mount Saint Joseph&quot;,
+    &quot;state&quot;: &quot;OH&quot;,
+    &quot;zip&quot;: &quot;45051&quot;,
+    &quot;lat&quot;: 39.0965,
+    &quot;long&quot;: -84.6431,
+    &quot;city_pop&quot;: 177,
+    &quot;job&quot;: &quot;Exhibition designer&quot;,
+    &quot;dob&quot;: &quot;30-05-1974&quot;,
+    &quot;trans_num&quot;: &quot;269ccb4cd0f1233c86f735b113ec7a0f&quot;,
+    &quot;unix_time&quot;: 1340262327,
+    &quot;merch_lat&quot;: 39.071911,
+    &quot;merch_long&quot;: -84.604047,
+    &quot;is_fraud&quot;: 0,
+    &quot;merch_zipcode&quot;: &quot;45238.0&quot;,
+    &quot;distance_km&quot;: 4.3402230406535365,
+    &quot;distance_band&quot;: &quot;0-10km&quot;
+  }
+]
+... (5000 total items)</pre></td>
+</tr><tr>
+  <td>step_3a</td>
   <td><pre>{
-  &quot;(&#x27;F&#x27;, &#x27;health_fitness&#x27;)&quot;: {
-    &quot;total_count&quot;: 149,
-    &quot;fraud_count&quot;: 9
+  &quot;(&#x27;health_fitness&#x27;, &#x27;10-50km&#x27;)&quot;: {
+    &quot;total_count&quot;: 51,
+    &quot;fraud_count&quot;: 0,
+    &quot;amt_sum&quot;: 2470.9300000000003
   },
-  &quot;(&#x27;M&#x27;, &#x27;grocery_pos&#x27;)&quot;: {
-    &quot;total_count&quot;: 308,
-    &quot;fraud_count&quot;: 130
+  &quot;(&#x27;grocery_pos&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 480,
+    &quot;fraud_count&quot;: 187,
+    &quot;amt_sum&quot;: 92245.47000000004
   },
-  &quot;(&#x27;F&#x27;, &#x27;personal_care&#x27;)&quot;: {
-    &quot;total_count&quot;: 211,
-    &quot;fraud_count&quot;: 24
+  &quot;(&#x27;personal_care&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 245,
+    &quot;fraud_count&quot;: 26,
+    &quot;amt_sum&quot;: 10350.639999999989
   },
-  &quot;(&#x27;M&#x27;, &#x27;personal_care&#x27;)&quot;: {
-    &quot;total_count&quot;: 112,
-    &quot;fraud_count&quot;: 7
+  &quot;(&#x27;shopping_pos&#x27;, &#x27;10-50km&#x27;)&quot;: {
+    &quot;total_count&quot;: 98,
+    &quot;fraud_count&quot;: 16,
+    &quot;amt_sum&quot;: 17622.090000000004
   },
-  &quot;(&#x27;F&#x27;, &#x27;shopping_pos&#x27;)&quot;: {
-    &quot;total_count&quot;: 259,
-    &quot;fraud_count&quot;: 61
+  &quot;(&#x27;shopping_net&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 415,
+    &quot;fraud_count&quot;: 172,
+    &quot;amt_sum&quot;: 194813.68000000005
   },
-  &quot;(&#x27;M&#x27;, &#x27;shopping_net&#x27;)&quot;: {
-    &quot;total_count&quot;: 244,
-    &quot;fraud_count&quot;: 131
-  },
-  &quot;(&#x27;M&#x27;, &#x27;shopping_pos&#x27;)&quot;: {
-    &quot;total_count&quot;: 227,
-    &quot;fraud_count&quot;: 50
-  },
-  &quot;(&#x27;M&#x27;, &#x27;kids_pets&#x27;)&quot;: {
-    &quot;total_count&quot;: 164,
-    &quot;fraud_count&quot;: 7
-  },
-  &quot;(&#x27;F&#x27;, &#x27;shopping_net&#x27;)&quot;: {
-    &quot;total_count&quot;: 282,
-    &quot;fraud_count&quot;: 84
-  },
-  &quot;(&#x27;F&#x27;, &#x27;gas_transport&#x27;)&quot;: {
-    &quot;total_count&quot;: 224,
-    &quot;fraud_count&quot;: 30
-  },
-  &quot;(&#x27;F&#x27;, &#x27;food_dining&#x27;)&quot;: {
-    &quot;total_count&quot;: 170,
-    &quot;fraud_count&quot;: 15
-  },
-  &quot;(&#x27;M&#x27;, &#x27;gas_transport&#x27;)&quot;: {
-    &quot;total_count&quot;: 224,
-    &quot;fraud_count&quot;: 43
-  },
-  &quot;(&#x27;M&#x27;, &#x27;health_fitness&#x27;)&quot;: {
-    &quot;total_count&quot;: 125,
-    &quot;fraud_count&quot;: 4
-  },
-  &quot;(&#x27;M&#x27;, &#x27;travel&#x27;)&quot;: {
-    &quot;total_count&quot;: 69,
-    &quot;fraud_count&quot;: 9
-  },
-  &quot;(&#x27;M&#x27;, &#x27;entertainment&#x27;)&quot;: {
-    &quot;total_count&quot;: 158,
-    &quot;fraud_count&quot;: 15
-  },
-  &quot;(&#x27;F&#x27;, &#x27;kids_pets&#x27;)&quot;: {
-    &quot;total_count&quot;: 230,
-    &quot;fraud_count&quot;: 31
-  },
-  &quot;(&#x27;M&#x27;, &#x27;home&#x27;)&quot;: {
-    &quot;total_count&quot;: 214,
-    &quot;fraud_count&quot;: 1
-  },
-  &quot;(&#x27;M&#x27;, &#x27;misc_pos&#x27;)&quot;: {
+  &quot;(&#x27;grocery_pos&#x27;, &#x27;10-50km&#x27;)&quot;: {
     &quot;total_count&quot;: 113,
-    &quot;fraud_count&quot;: 13
+    &quot;fraud_count&quot;: 47,
+    &quot;amt_sum&quot;: 21388.839999999997
   },
-  &quot;(&#x27;F&#x27;, &#x27;travel&#x27;)&quot;: {
-    &quot;total_count&quot;: 88,
-    &quot;fraud_count&quot;: 12
+  &quot;(&#x27;kids_pets&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 314,
+    &quot;fraud_count&quot;: 33,
+    &quot;amt_sum&quot;: 15668.76000000001
   },
-  &quot;(&#x27;F&#x27;, &#x27;home&#x27;)&quot;: {
-    &quot;total_count&quot;: 232,
-    &quot;fraud_count&quot;: 25
+  &quot;(&#x27;grocery_pos&#x27;, &#x27;0-10km&#x27;)&quot;: {
+    &quot;total_count&quot;: 5,
+    &quot;fraud_count&quot;: 2,
+    &quot;amt_sum&quot;: 903.62
+  },
+  &quot;(&#x27;shopping_net&#x27;, &#x27;10-50km&#x27;)&quot;: {
+    &quot;total_count&quot;: 103,
+    &quot;fraud_count&quot;: 38,
+    &quot;amt_sum&quot;: 42628.56999999999
+  },
+  &quot;(&#x27;shopping_pos&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 386,
+    &quot;fraud_count&quot;: 95,
+    &quot;amt_sum&quot;: 104737.50000000006
+  },
+  &quot;(&#x27;gas_transport&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 354,
+    &quot;fraud_count&quot;: 58,
+    &quot;amt_sum&quot;: 19459.930000000015
+  },
+  &quot;(&#x27;food_dining&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 243,
+    &quot;fraud_count&quot;: 16,
+    &quot;amt_sum&quot;: 12320.429999999997
+  },
+  &quot;(&#x27;health_fitness&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 221,
+    &quot;fraud_count&quot;: 13,
+    &quot;amt_sum&quot;: 11025.880000000001
+  },
+  &quot;(&#x27;gas_transport&#x27;, &#x27;10-50km&#x27;)&quot;: {
+    &quot;total_count&quot;: 89,
+    &quot;fraud_count&quot;: 15,
+    &quot;amt_sum&quot;: 5109.550000000003
+  },
+  &quot;(&#x27;travel&#x27;, &#x27;10-50km&#x27;)&quot;: {
+    &quot;total_count&quot;: 34,
+    &quot;fraud_count&quot;: 5,
+    &quot;amt_sum&quot;: 2149.46
+  },
+  &quot;(&#x27;entertainment&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 223,
+    &quot;fraud_count&quot;: 27,
+    &quot;amt_sum&quot;: 25754.78
+  },
+  &quot;(&#x27;home&#x27;, &#x27;10-50km&#x27;)&quot;: {
+    &quot;total_count&quot;: 98,
+    &quot;fraud_count&quot;: 6,
+    &quot;amt_sum&quot;: 7926.719999999999
+  },
+  &quot;(&#x27;misc_pos&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 196,
+    &quot;fraud_count&quot;: 18,
+    &quot;amt_sum&quot;: 12074.870000000004
+  },
+  &quot;(&#x27;travel&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 121,
+    &quot;fraud_count&quot;: 16,
+    &quot;amt_sum&quot;: 35736.98
+  },
+  &quot;(&#x27;home&#x27;, &#x27;50-200km&#x27;)&quot;: {
+    &quot;total_count&quot;: 344,
+    &quot;fraud_count&quot;: 20,
+    &quot;amt_sum&quot;: 24821.479999999996
   }
 }
-... (28 total keys)</pre></td>
+... (41 total keys)</pre></td>
 </tr><tr>
-  <td>step_2</td>
-  <td><pre>{
-  &quot;(&#x27;F&#x27;, &#x27;health_fitness&#x27;)&quot;: 0.06040268456375839,
-  &quot;(&#x27;M&#x27;, &#x27;grocery_pos&#x27;)&quot;: 0.42207792207792205,
-  &quot;(&#x27;F&#x27;, &#x27;personal_care&#x27;)&quot;: 0.11374407582938388,
-  &quot;(&#x27;M&#x27;, &#x27;personal_care&#x27;)&quot;: 0.0625,
-  &quot;(&#x27;F&#x27;, &#x27;shopping_pos&#x27;)&quot;: 0.23552123552123552,
-  &quot;(&#x27;M&#x27;, &#x27;shopping_net&#x27;)&quot;: 0.5368852459016393,
-  &quot;(&#x27;M&#x27;, &#x27;shopping_pos&#x27;)&quot;: 0.22026431718061673,
-  &quot;(&#x27;M&#x27;, &#x27;kids_pets&#x27;)&quot;: 0.042682926829268296,
-  &quot;(&#x27;F&#x27;, &#x27;shopping_net&#x27;)&quot;: 0.2978723404255319,
-  &quot;(&#x27;F&#x27;, &#x27;gas_transport&#x27;)&quot;: 0.13392857142857142,
-  &quot;(&#x27;F&#x27;, &#x27;food_dining&#x27;)&quot;: 0.08823529411764706,
-  &quot;(&#x27;M&#x27;, &#x27;gas_transport&#x27;)&quot;: 0.19196428571428573,
-  &quot;(&#x27;M&#x27;, &#x27;health_fitness&#x27;)&quot;: 0.032,
-  &quot;(&#x27;M&#x27;, &#x27;travel&#x27;)&quot;: 0.13043478260869565,
-  &quot;(&#x27;M&#x27;, &#x27;entertainment&#x27;)&quot;: 0.0949367088607595,
-  &quot;(&#x27;F&#x27;, &#x27;kids_pets&#x27;)&quot;: 0.13478260869565217,
-  &quot;(&#x27;M&#x27;, &#x27;home&#x27;)&quot;: 0.004672897196261682,
-  &quot;(&#x27;M&#x27;, &#x27;misc_pos&#x27;)&quot;: 0.11504424778761062,
-  &quot;(&#x27;F&#x27;, &#x27;travel&#x27;)&quot;: 0.13636363636363635,
-  &quot;(&#x27;F&#x27;, &#x27;home&#x27;)&quot;: 0.10775862068965517
-}
-... (28 total keys)</pre></td>
-</tr><tr>
-  <td>step_3</td>
-  <td><pre>{
-  &quot;F&quot;: 190.92857142857142,
-  &quot;M&quot;: 166.21428571428572
-}</pre></td>
-</tr><tr>
-  <td>step_4</td>
-  <td><pre>{
-  &quot;(&#x27;M&#x27;, &#x27;grocery_pos&#x27;)&quot;: {
-    &quot;total_count&quot;: 308,
-    &quot;fraud_count&quot;: 130
-  },
-  &quot;(&#x27;F&#x27;, &#x27;personal_care&#x27;)&quot;: {
-    &quot;total_count&quot;: 211,
-    &quot;fraud_count&quot;: 24
-  },
-  &quot;(&#x27;F&#x27;, &#x27;shopping_pos&#x27;)&quot;: {
-    &quot;total_count&quot;: 259,
-    &quot;fraud_count&quot;: 61
-  },
-  &quot;(&#x27;M&#x27;, &#x27;shopping_net&#x27;)&quot;: {
-    &quot;total_count&quot;: 244,
-    &quot;fraud_count&quot;: 131
-  },
-  &quot;(&#x27;M&#x27;, &#x27;shopping_pos&#x27;)&quot;: {
-    &quot;total_count&quot;: 227,
-    &quot;fraud_count&quot;: 50
-  },
-  &quot;(&#x27;F&#x27;, &#x27;shopping_net&#x27;)&quot;: {
-    &quot;total_count&quot;: 282,
-    &quot;fraud_count&quot;: 84
-  },
-  &quot;(&#x27;F&#x27;, &#x27;gas_transport&#x27;)&quot;: {
-    &quot;total_count&quot;: 224,
-    &quot;fraud_count&quot;: 30
-  },
-  &quot;(&#x27;M&#x27;, &#x27;gas_transport&#x27;)&quot;: {
-    &quot;total_count&quot;: 224,
-    &quot;fraud_count&quot;: 43
-  },
-  &quot;(&#x27;F&#x27;, &#x27;kids_pets&#x27;)&quot;: {
-    &quot;total_count&quot;: 230,
-    &quot;fraud_count&quot;: 31
-  },
-  &quot;(&#x27;M&#x27;, &#x27;home&#x27;)&quot;: {
-    &quot;total_count&quot;: 214,
-    &quot;fraud_count&quot;: 1
-  },
-  &quot;(&#x27;F&#x27;, &#x27;home&#x27;)&quot;: {
-    &quot;total_count&quot;: 232,
-    &quot;fraud_count&quot;: 25
-  },
-  &quot;(&#x27;F&#x27;, &#x27;grocery_pos&#x27;)&quot;: {
-    &quot;total_count&quot;: 290,
-    &quot;fraud_count&quot;: 106
-  }
-}</pre></td>
-</tr><tr>
-  <td>step_5</td>
-  <td><pre>{
-  &quot;M&quot;: [
-    &quot;shopping_net&quot;,
-    0.5368852459016393
-  ],
-  &quot;F&quot;: [
-    &quot;grocery_pos&quot;,
-    0.36551724137931035
-  ]
-}</pre></td>
-</tr><tr>
-  <td>step_6</td>
+  <td>step_4a</td>
   <td><pre>[
   [
-    &quot;M&quot;,
-    &quot;shopping_net&quot;,
-    0.536885
+    &quot;health_fitness&quot;,
+    &quot;10-50km&quot;,
+    0.0,
+    51,
+    48.45
   ],
   [
-    &quot;F&quot;,
     &quot;grocery_pos&quot;,
-    0.365517
+    &quot;50-200km&quot;,
+    0.389583,
+    480,
+    192.18
+  ],
+  [
+    &quot;personal_care&quot;,
+    &quot;50-200km&quot;,
+    0.106122,
+    245,
+    42.25
+  ],
+  [
+    &quot;shopping_pos&quot;,
+    &quot;10-50km&quot;,
+    0.163265,
+    98,
+    179.82
+  ],
+  [
+    &quot;shopping_net&quot;,
+    &quot;50-200km&quot;,
+    0.414458,
+    415,
+    469.43
+  ],
+  [
+    &quot;grocery_pos&quot;,
+    &quot;10-50km&quot;,
+    0.415929,
+    113,
+    189.28
+  ],
+  [
+    &quot;kids_pets&quot;,
+    &quot;50-200km&quot;,
+    0.105096,
+    314,
+    49.9
+  ],
+  [
+    &quot;shopping_net&quot;,
+    &quot;10-50km&quot;,
+    0.368932,
+    103,
+    413.87
+  ],
+  [
+    &quot;shopping_pos&quot;,
+    &quot;50-200km&quot;,
+    0.246114,
+    386,
+    271.34
+  ],
+  [
+    &quot;gas_transport&quot;,
+    &quot;50-200km&quot;,
+    0.163842,
+    354,
+    54.97
+  ]
+]
+... (28 total items)</pre></td>
+</tr><tr>
+  <td>step_5a</td>
+  <td><pre>[
+  [
+    &quot;misc_net&quot;,
+    &quot;10-50km&quot;,
+    0.5,
+    66,
+    435.85
+  ],
+  [
+    &quot;grocery_pos&quot;,
+    &quot;10-50km&quot;,
+    0.415929,
+    113,
+    189.28
+  ],
+  [
+    &quot;shopping_net&quot;,
+    &quot;50-200km&quot;,
+    0.414458,
+    415,
+    469.43
   ]
 ]</pre></td>
 </tr></tbody>
