@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Report — single_question_result</title>
+  <style>
+    :root {
+        --green:    #22c55e;
+        --green-bg: #dcfce7;
+        --green-fg: #166534;
+        --red:      #ef4444;
+        --red-bg:   #fee2e2;
+        --red-fg:   #991b1b;
+        --blue-bg:  #dbeafe;
+        --blue-fg:  #1e40af;
+        --amber-bg: #fef3c7;
+        --amber-fg: #92400e;
+        --gray-50:  #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-500: #6b7280;
+        --gray-700: #374151;
+        --gray-900: #111827;
+        --bg-code:  #1e1e2e;
+        --fg-code:  #cdd6f4;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 14px;
+        color: var(--gray-900);
+        background: var(--gray-50);
+        line-height: 1.5;
+    }
+
+    .page-wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; }
+
+    /* ── Header ── */
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px;
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .page-header h1 { font-size: 1.5rem; font-weight: 700; color: var(--gray-900); }
+    .header-meta { color: var(--gray-500); font-size: 0.85rem; margin-top: 4px; }
+    .pass-rate-badge {
+        padding: 10px 20px;
+        border-radius: 999px;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+    .pass-rate-badge.ok  { background: var(--green-bg); color: var(--green-fg); }
+    .pass-rate-badge.bad { background: var(--red-bg);   color: var(--red-fg); }
+
+    /* ── Section ── */
+    .section { margin-bottom: 20px; }
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid var(--gray-200);
+    }
+
+    /* ── Summary cards ── */
+    .cards-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+    }
+    .card {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        padding: 14px 16px;
+    }
+    .card-label { font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; }
+    .card-value { font-size: 1.6rem; font-weight: 700; margin-top: 4px; }
+    .card-value.green { color: var(--green); }
+    .card-value.red   { color: var(--red); }
+    .card-value.blue  { color: #3b82f6; }
+
+    /* ── Difficulty table ── */
+    .breakdown-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .breakdown-table th {
+        background: var(--gray-100);
+        padding: 8px 14px;
+        text-align: left;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--gray-500);
+    }
+    .breakdown-table td { padding: 10px 14px; border-top: 1px solid var(--gray-200); }
+
+    /* ── Badges ── */
+    .badge {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-easy   { background: var(--green-bg); color: var(--green-fg); }
+    .badge-medium { background: var(--amber-bg); color: var(--amber-fg); }
+    .badge-hard   { background: var(--red-bg);   color: var(--red-fg); }
+    .badge-ok     { background: var(--green-bg); color: var(--green-fg); }
+    .badge-fail   { background: var(--red-bg);   color: var(--red-fg); }
+    .badge-layer  { background: var(--blue-bg);  color: var(--blue-fg); font-size: 0.7rem; }
+    .badge-iter-ok   { background: var(--green-bg); color: var(--green-fg); }
+    .badge-iter-fail { background: var(--red-bg);   color: var(--red-fg); }
+
+    /* ── Question accordion ── */
+    details.q-accordion {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        margin-bottom: 10px;
+        overflow: hidden;
+    }
+    details.q-accordion.q-ok   > summary { border-left: 4px solid var(--green); }
+    details.q-accordion.q-fail > summary { border-left: 4px solid var(--red); }
+
+    details.q-accordion > summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        cursor: pointer;
+        user-select: none;
+        list-style: none;
+        flex-wrap: wrap;
+    }
+    details.q-accordion > summary::-webkit-details-marker { display: none; }
+    details.q-accordion[open] > summary { background: var(--gray-50); }
+
+    .q-id    { font-weight: 700; color: var(--gray-500); min-width: 32px; }
+    .q-text  { flex: 1; font-weight: 500; }
+    .q-iters { font-size: 0.75rem; color: var(--gray-500); margin-left: auto; }
+
+    .q-body { padding: 16px; border-top: 1px solid var(--gray-200); }
+
+    /* ── Answer / Error box ── */
+    .answer-box {
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+    .answer-box.ok   { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+    .answer-box.fail { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+
+    /* ── Timeline ── */
+    .timeline { margin-bottom: 14px; }
+    .timeline-label { font-size: 0.75rem; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .timeline-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+    .tl-arrow { color: var(--gray-500); font-size: 0.8rem; }
+
+    .tl-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: default;
+        white-space: nowrap;
+    }
+    .tl-builder      { background: var(--blue-bg);  color: var(--blue-fg); }
+    .tl-builder-fail { background: #fce7f3; color: #9d174d; }
+    .tl-critic-ok    { background: var(--green-bg); color: var(--green-fg); }
+    .tl-critic-fail  { background: var(--red-bg);   color: var(--red-fg); }
+    .tl-exec-ok      { background: var(--green-bg); color: var(--green-fg); }
+    .tl-exec-fail    { background: var(--red-bg);   color: var(--red-fg); }
+    .tl-unknown      { background: var(--gray-100); color: var(--gray-700); }
+
+    /* ── Iteration accordion ── */
+    details.iter-block {
+        border: 1px solid var(--gray-200);
+        border-radius: 6px;
+        margin-bottom: 8px;
+        overflow: hidden;
+        background: var(--gray-50);
+    }
+    details.iter-block > summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        cursor: pointer;
+        user-select: none;
+        list-style: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    details.iter-block > summary::-webkit-details-marker { display: none; }
+    details.iter-block[open] > summary { background: var(--gray-100); }
+    .iter-body { padding: 14px; border-top: 1px solid var(--gray-200); background: white; }
+
+    /* ── Critic block ── */
+    .critic-block { margin-bottom: 12px; }
+    .critic-reasoning {
+        font-size: 0.85rem;
+        color: var(--gray-700);
+        margin-bottom: 8px;
+        padding: 8px 12px;
+        background: var(--gray-50);
+        border-radius: 4px;
+        border-left: 3px solid var(--gray-200);
+    }
+
+    details.sub-block {
+        border: 1px solid var(--gray-200);
+        border-radius: 4px;
+        margin-top: 6px;
+        background: white;
+    }
+    details.sub-block > summary {
+        padding: 6px 10px;
+        cursor: pointer;
+        user-select: none;
+        list-style: none;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--gray-700);
+    }
+    details.sub-block > summary::-webkit-details-marker { display: none; }
+    .sub-block-body { padding: 8px 12px; border-top: 1px solid var(--gray-200); }
+    .error-list, .suggest-list {
+        padding-left: 18px;
+        font-size: 0.82rem;
+        color: var(--red-fg);
+    }
+    .suggest-list { color: var(--amber-fg); }
+    .error-list li, .suggest-list li { margin-bottom: 4px; }
+
+    /* ── DAG section ── */
+    .dag-section { margin-top: 10px; }
+    .dag-description {
+        font-size: 0.82rem;
+        color: var(--gray-500);
+        font-style: italic;
+        margin-bottom: 10px;
+    }
+    .dag-failed {
+        padding: 10px 14px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 6px;
+        color: #9a3412;
+        font-family: monospace;
+        font-size: 0.82rem;
+        white-space: pre-wrap;
+    }
+
+    /* ── DAG node card ── */
+    .dag-node {
+        border: 1px solid var(--gray-200);
+        border-radius: 6px;
+        margin-bottom: 8px;
+        overflow: hidden;
+    }
+    .dag-node-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--gray-100);
+        flex-wrap: wrap;
+    }
+    .node-id     { font-family: monospace; font-weight: 700; font-size: 0.85rem; }
+    .output-type { font-size: 0.72rem; color: var(--gray-500); font-family: monospace; margin-left: auto; }
+    .dag-node-operation {
+        padding: 6px 12px;
+        font-size: 0.82rem;
+        color: var(--gray-700);
+        font-style: italic;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .dag-node-inputs {
+        padding: 6px 12px;
+        font-size: 0.82rem;
+        color: var(--gray-700);
+        border-bottom: 1px solid var(--gray-200);
+    }
+    .dag-node-inputs ul { padding-left: 16px; margin-top: 2px; }
+    .dag-node-inputs li { font-family: monospace; font-size: 0.8rem; color: var(--gray-500); }
+    .dag-node-inputs li code { color: var(--gray-700); }
+
+    /* ── Code block ── */
+    pre.code-block {
+        background: var(--bg-code);
+        color: var(--fg-code);
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+        font-size: 0.82rem;
+        line-height: 1.65;
+        margin: 0;
+    }
+    .hl-kw { color: #cba6f7; }   /* purple  — keywords */
+    .hl-bi { color: #89dceb; }   /* cyan    — builtins */
+    .hl-st { color: #a6e3a1; }   /* green   — strings */
+    .hl-cm { color: #6c7086; }   /* gray    — comments */
+
+    /* ── Edges ── */
+    .edges-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 12px;
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: var(--gray-700);
+        border-top: 1px solid var(--gray-200);
+        background: var(--gray-50);
+    }
+    .edge-item { background: var(--blue-bg); color: var(--blue-fg); padding: 2px 8px; border-radius: 4px; }
+    .final-node-label {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        color: var(--gray-500);
+        border-top: 1px solid var(--gray-200);
+    }
+    .final-node-label code { font-weight: 600; color: var(--gray-700); }
+
+    /* ── DAG SVG visualizer ── */
+    .dag-svg-wrap {
+        border: 1px solid var(--gray-200);
+        border-radius: 6px;
+        padding: 14px 16px;
+        background: var(--gray-50);
+        margin-bottom: 12px;
+        overflow-x: auto;
+    }
+    .dag-svg-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 8px;
+    }
+
+    /* ── Node outputs table ── */
+    .outputs-section { margin-top: 14px; }
+    .outputs-section strong { font-size: 0.82rem; color: var(--gray-700); display: block; margin-bottom: 6px; }
+    .outputs-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid var(--gray-200);
+        border-radius: 6px;
+        overflow: hidden;
+        font-size: 0.82rem;
+    }
+    .outputs-table th {
+        background: var(--gray-100);
+        padding: 6px 12px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--gray-700);
+    }
+    .outputs-table td { padding: 8px 12px; border-top: 1px solid var(--gray-200); vertical-align: top; }
+    .outputs-table td:first-child { font-family: monospace; font-weight: 600; color: #3b82f6; white-space: nowrap; }
+    .outputs-table pre { background: none; color: var(--gray-700); font-size: 0.8rem; white-space: pre-wrap; word-break: break-all; }
+    .no-outputs { font-size: 0.82rem; color: var(--gray-500); font-style: italic; padding: 8px 0; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<div class="page-header">
+  <div>
+    <h1>Eval Report</h1>
+    <div class="header-meta">
+      Dataset: <strong>single_question_result</strong>
+      &nbsp;·&nbsp; Generated: 2026-02-19 11:38:47
+    </div>
+  </div>
+  <div class="pass-rate-badge ok">100.0% Pass Rate</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Summary</div>
+  <div class="cards-row"><div class="card">
+  <div class="card-label">Total Questions</div>
+  <div class="card-value blue">1</div>
+</div><div class="card">
+  <div class="card-label">Pass Rate</div>
+  <div class="card-value green">100.0%</div>
+</div><div class="card">
+  <div class="card-label">Passed</div>
+  <div class="card-value green">1</div>
+</div><div class="card">
+  <div class="card-label">Failed</div>
+  <div class="card-value ">0</div>
+</div><div class="card">
+  <div class="card-label">Critic Exhausted</div>
+  <div class="card-value ">0</div>
+</div></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Difficulty Breakdown</div>
+  <table class="breakdown-table">
+    <thead><tr><th>Difficulty</th><th>Total</th><th>Passed</th><th>Failed</th><th>Pass Rate</th></tr></thead>
+    <tbody><tr>
+  <td><span class="badge badge-easy">easy</span></td>
+  <td>0</td>
+  <td style="color:var(--green-fg);font-weight:600">0</td>
+  <td style="color:var(--red-fg);font-weight:600">0</td>
+  <td>—</td>
+</tr><tr>
+  <td><span class="badge badge-medium">medium</span></td>
+  <td>0</td>
+  <td style="color:var(--green-fg);font-weight:600">0</td>
+  <td style="color:var(--red-fg);font-weight:600">0</td>
+  <td>—</td>
+</tr><tr>
+  <td><span class="badge badge-hard">hard</span></td>
+  <td>1</td>
+  <td style="color:var(--green-fg);font-weight:600">1</td>
+  <td style="color:var(--red-fg);font-weight:600">0</td>
+  <td>100%</td>
+</tr></tbody>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title">Questions (1)</div>
+  <details class="q-accordion q-ok">
+  <summary>
+    <span class="q-id">Q10</span>
+    <span class="q-text">Using the transactions list, perform the following steps in order: STEP 1 - group transactions by (gender, category) and count total transactions and fraud transactions for each (gender, category) pair; STEP 2 - compute the fraud rate for each (gender, category) pair as fraud_count divided by total_count; STEP 3 - using the counts from STEP 1, compute the total transaction count per gender (sum of counts across all categories for that gender) and the number of distinct categories per gender, then compute the per-gender average transaction count as total_for_gender divided by num_categories_for_gender; STEP 4 - filter the (gender, category) pairs from STEP 1 keeping only those where the count is strictly greater than the gender average from STEP 3; STEP 5 - for each gender, find the category with the highest fraud rate among the filtered pairs from STEP 4; STEP 6 - build a list of [gender, category, round(fraud_rate, 6)] for each gender&#x27;s top category and sort it by fraud_rate descending. Return the final sorted list.</span>
+    <span class="badge badge-hard">hard</span>
+    <span class="badge badge-ok">✓ PASSED</span>
+    <span class="q-iters">1 iteration</span>
+  </summary>
+  <div class="q-body">
+    <div class="answer-box ok"><strong>Answer:</strong> [
+  [
+    &quot;M&quot;,
+    &quot;shopping_net&quot;,
+    0.536885
+  ],
+  [
+    &quot;F&quot;,
+    &quot;grocery_pos&quot;,
+    0.365517
+  ]
+]</div>
+    
+    <details class="iter-block iter-ok" open>
+  <summary>
+    Iteration 1 &nbsp;
+    <span class="badge badge-iter-ok">APPROVED ✓</span>
+  </summary>
+  <div class="iter-body">
+    <div class="critic-block">
+  <div class="critic-reasoning">DAG is valid and approved for execution.</div>
+  
+  
+</div>
+    <div class="dag-section"><div class="dag-description">This DAG performs a series of computations on the transactions dataset to determine the top category by fraud rate for each gender, filtered by average transaction count per gender.</div>
+<div class="dag-svg-wrap"><div class="dag-svg-title">DAG Structure</div><svg xmlns="http://www.w3.org/2000/svg" width="1378" height="216" style="max-width:100%;display:block;overflow:visible;">
+<defs><marker id="dag-arrow" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#94a3b8"/></marker></defs>
+<path d="M234.0,108.0 C269.0,108.0 269.0,62.0 304.0,62.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<path d="M234.0,108.0 C269.0,108.0 269.0,154.0 304.0,154.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<path d="M234.0,108.0 C409.0,108.0 409.0,108.0 584.0,108.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<path d="M514.0,62.0 C689.0,62.0 689.0,108.0 864.0,108.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<path d="M514.0,154.0 C549.0,154.0 549.0,108.0 584.0,108.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<path d="M794.0,108.0 C829.0,108.0 829.0,108.0 864.0,108.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<path d="M1074.0,108.0 C1109.0,108.0 1109.0,108.0 1144.0,108.0" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#dag-arrow)"/>
+<rect x="24" y="70" width="210" height="76" rx="6" ry="6" fill="white" stroke="#3b82f6" stroke-width="1.8"/>
+<rect x="24" y="70" width="210" height="22" rx="6" ry="6" fill="#3b82f6"/>
+<rect x="24" y="86" width="210" height="6" fill="#3b82f6"/>
+<text x="32" y="85" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_1</text>
+<text x="32" y="108" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Group transactions by (gende</text>
+<text x="32" y="122" font-family="system-ui,sans-serif" font-size="11" fill="#374151">r, category) and count tota…</text>
+<text x="32" y="140" font-family="monospace" font-size="10" fill="#3b82f6">Layer 0</text>
+<rect x="304" y="24" width="210" height="76" rx="6" ry="6" fill="white" stroke="#0d9488" stroke-width="1.8"/>
+<rect x="304" y="24" width="210" height="22" rx="6" ry="6" fill="#0d9488"/>
+<rect x="304" y="40" width="210" height="6" fill="#0d9488"/>
+<text x="312" y="39" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_2</text>
+<text x="312" y="62" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Compute fraud rate for each </text>
+<text x="312" y="76" font-family="system-ui,sans-serif" font-size="11" fill="#374151">(gender, category) pair.</text>
+<text x="312" y="94" font-family="monospace" font-size="10" fill="#0d9488">Layer 1</text>
+<rect x="304" y="116" width="210" height="76" rx="6" ry="6" fill="white" stroke="#0d9488" stroke-width="1.8"/>
+<rect x="304" y="116" width="210" height="22" rx="6" ry="6" fill="#0d9488"/>
+<rect x="304" y="132" width="210" height="6" fill="#0d9488"/>
+<text x="312" y="131" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_3</text>
+<text x="312" y="154" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Compute total transaction co</text>
+<text x="312" y="168" font-family="system-ui,sans-serif" font-size="11" fill="#374151">unt and distinct categories…</text>
+<text x="312" y="186" font-family="monospace" font-size="10" fill="#0d9488">Layer 1</text>
+<rect x="584" y="70" width="210" height="76" rx="6" ry="6" fill="white" stroke="#7c3aed" stroke-width="1.8"/>
+<rect x="584" y="70" width="210" height="22" rx="6" ry="6" fill="#7c3aed"/>
+<rect x="584" y="86" width="210" height="6" fill="#7c3aed"/>
+<text x="592" y="85" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_4</text>
+<text x="592" y="108" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Filter (gender, category) pa</text>
+<text x="592" y="122" font-family="system-ui,sans-serif" font-size="11" fill="#374151">irs where count is greater …</text>
+<text x="592" y="140" font-family="monospace" font-size="10" fill="#7c3aed">Layer 2</text>
+<rect x="864" y="70" width="210" height="76" rx="6" ry="6" fill="white" stroke="#d97706" stroke-width="1.8"/>
+<rect x="864" y="70" width="210" height="22" rx="6" ry="6" fill="#d97706"/>
+<rect x="864" y="86" width="210" height="6" fill="#d97706"/>
+<text x="872" y="85" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_5</text>
+<text x="872" y="108" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Find the category with the h</text>
+<text x="872" y="122" font-family="system-ui,sans-serif" font-size="11" fill="#374151">ighest fraud rate for each …</text>
+<text x="872" y="140" font-family="monospace" font-size="10" fill="#d97706">Layer 3</text>
+<rect x="1144" y="70" width="210" height="76" rx="6" ry="6" fill="white" stroke="#dc2626" stroke-width="1.8"/>
+<rect x="1144" y="70" width="210" height="22" rx="6" ry="6" fill="#dc2626"/>
+<rect x="1144" y="86" width="210" height="6" fill="#dc2626"/>
+<text x="1152" y="85" font-family="monospace" font-size="12" fill="white" font-weight="bold">step_6</text>
+<text x="1152" y="108" font-family="system-ui,sans-serif" font-size="11" fill="#374151">Build and sort the final lis</text>
+<text x="1152" y="122" font-family="system-ui,sans-serif" font-size="11" fill="#374151">t of [gender, category, fra…</text>
+<text x="1152" y="140" font-family="monospace" font-size="10" fill="#dc2626">Layer 4</text>
+</svg></div>
+<div class="dag-node">
+  <div class="dag-node-header">
+    <span class="node-id">step_1</span>
+    <span class="badge badge-layer">Layer 0</span>
+    <span class="output-type">→ dict[tuple[str, str], dict[str, int]]</span>
+  </div>
+  <div class="dag-node-operation">Group transactions by (gender, category) and count total and fraud transactions.</div>
+  <div class="dag-node-inputs">
+  <strong>Inputs:</strong>
+  <ul><li><code>transactions</code> ← <code>dataset.transactions</code></li></ul>
+</div>
+  <pre class="code-block"><code><span class="hl-kw">def</span> group_transactions_by_gender_category(transactions):
+    result = defaultdict(<span class="hl-kw">lambda</span>: {<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>: 0, <span <span class="hl-kw">class</span>="hl-st">&#x27;fraud_count&#x27;</span>: 0})
+    <span class="hl-kw">for</span> transaction <span class="hl-kw">in</span> transactions:
+        key = (transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;gender&#x27;</span>], transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;category&#x27;</span>])
+        result[key][<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] += 1
+        <span class="hl-kw">if</span> transaction[<span <span class="hl-kw">class</span>="hl-st">&#x27;is_fraud&#x27;</span>] == 1:
+            result[key][<span <span class="hl-kw">class</span>="hl-st">&#x27;fraud_count&#x27;</span>] += 1
+    <span class="hl-kw">return</span> result</code></pre>
+</div>
+<div class="dag-node">
+  <div class="dag-node-header">
+    <span class="node-id">step_2</span>
+    <span class="badge badge-layer">Layer 1</span>
+    <span class="output-type">→ dict[tuple[str, str], float]</span>
+  </div>
+  <div class="dag-node-operation">Compute fraud rate for each (gender, category) pair.</div>
+  <div class="dag-node-inputs">
+  <strong>Inputs:</strong>
+  <ul><li><code>grouped_data</code> ← <code>prev_node.step_1.output</code></li></ul>
+</div>
+  <pre class="code-block"><code><span class="hl-kw">def</span> compute_fraud_rate(grouped_data):
+    fraud_rates = {}
+    <span class="hl-kw">for</span> key, counts <span class="hl-kw">in</span> grouped_data.items():
+        fraud_rates[key] = counts[<span <span class="hl-kw">class</span>="hl-st">&#x27;fraud_count&#x27;</span>] / counts[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] <span class="hl-kw">if</span> counts[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] &gt; 0 <span class="hl-kw">else</span> 0
+    <span class="hl-kw">return</span> fraud_rates</code></pre>
+</div>
+<div class="dag-node">
+  <div class="dag-node-header">
+    <span class="node-id">step_3</span>
+    <span class="badge badge-layer">Layer 1</span>
+    <span class="output-type">→ dict[str, float]</span>
+  </div>
+  <div class="dag-node-operation">Compute total transaction count and distinct categories per gender, then compute average transaction count per gender.</div>
+  <div class="dag-node-inputs">
+  <strong>Inputs:</strong>
+  <ul><li><code>grouped_data</code> ← <code>prev_node.step_1.output</code></li></ul>
+</div>
+  <pre class="code-block"><code><span class="hl-kw">def</span> compute_gender_averages(grouped_data):
+    gender_totals = defaultdict(<span class="hl-kw">lambda</span>: {<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>: 0, <span <span class="hl-kw">class</span>="hl-st">&#x27;categories&#x27;</span>: <span class="hl-bi">set</span>()})
+    <span class="hl-kw">for</span> (gender, category), counts <span class="hl-kw">in</span> grouped_data.items():
+        gender_totals[gender][<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] += counts[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>]
+        gender_totals[gender][<span <span class="hl-kw">class</span>="hl-st">&#x27;categories&#x27;</span>].add(category)
+    gender_averages = {}
+    <span class="hl-kw">for</span> gender, data <span class="hl-kw">in</span> gender_totals.items():
+        num_categories = <span class="hl-bi">len</span>(data[<span <span class="hl-kw">class</span>="hl-st">&#x27;categories&#x27;</span>])
+        gender_averages[gender] = data[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] / num_categories <span class="hl-kw">if</span> num_categories &gt; 0 <span class="hl-kw">else</span> 0
+    <span class="hl-kw">return</span> gender_averages</code></pre>
+</div>
+<div class="dag-node">
+  <div class="dag-node-header">
+    <span class="node-id">step_4</span>
+    <span class="badge badge-layer">Layer 2</span>
+    <span class="output-type">→ dict[tuple[str, str], dict[str, int]]</span>
+  </div>
+  <div class="dag-node-operation">Filter (gender, category) pairs where count is greater than gender average.</div>
+  <div class="dag-node-inputs">
+  <strong>Inputs:</strong>
+  <ul><li><code>grouped_data</code> ← <code>prev_node.step_1.output</code></li><li><code>gender_averages</code> ← <code>prev_node.step_3.output</code></li></ul>
+</div>
+  <pre class="code-block"><code><span class="hl-kw">def</span> filter_by_gender_average(grouped_data, gender_averages):
+    filtered_data = {}
+    <span class="hl-kw">for</span> key, counts <span class="hl-kw">in</span> grouped_data.items():
+        gender = key[0]
+        <span class="hl-kw">if</span> counts[<span <span class="hl-kw">class</span>="hl-st">&#x27;total_count&#x27;</span>] &gt; gender_averages[gender]:
+            filtered_data[key] = counts
+    <span class="hl-kw">return</span> filtered_data</code></pre>
+</div>
+<div class="dag-node">
+  <div class="dag-node-header">
+    <span class="node-id">step_5</span>
+    <span class="badge badge-layer">Layer 3</span>
+    <span class="output-type">→ dict[str, tuple[str, float]]</span>
+  </div>
+  <div class="dag-node-operation">Find the category with the highest fraud rate for each gender among filtered pairs.</div>
+  <div class="dag-node-inputs">
+  <strong>Inputs:</strong>
+  <ul><li><code>filtered_data</code> ← <code>prev_node.step_4.output</code></li><li><code>fraud_rates</code> ← <code>prev_node.step_2.output</code></li></ul>
+</div>
+  <pre class="code-block"><code><span class="hl-kw">def</span> find_top_category_by_fraud_rate(filtered_data, fraud_rates):
+    top_categories = {}
+    <span class="hl-kw">for</span> (gender, category), counts <span class="hl-kw">in</span> filtered_data.items():
+        fraud_rate = fraud_rates[(gender, category)]
+        <span class="hl-kw">if</span> gender <span class="hl-kw">not</span> <span class="hl-kw">in</span> top_categories <span class="hl-kw">or</span> fraud_rate &gt; top_categories[gender][1]:
+            top_categories[gender] = (category, fraud_rate)
+    <span class="hl-kw">return</span> top_categories</code></pre>
+</div>
+<div class="dag-node">
+  <div class="dag-node-header">
+    <span class="node-id">step_6</span>
+    <span class="badge badge-layer">Layer 4</span>
+    <span class="output-type">→ list[list]</span>
+  </div>
+  <div class="dag-node-operation">Build and sort the final list of [gender, category, fraud_rate].</div>
+  <div class="dag-node-inputs">
+  <strong>Inputs:</strong>
+  <ul><li><code>top_categories</code> ← <code>prev_node.step_5.output</code></li></ul>
+</div>
+  <pre class="code-block"><code><span class="hl-kw">def</span> build_and_sort_final_list(top_categories):
+    result = [[gender, category, <span class="hl-bi">round</span>(fraud_rate, 6)] <span class="hl-kw">for</span> gender, (category, fraud_rate) <span class="hl-kw">in</span> top_categories.items()]
+    <span class="hl-kw">return</span> <span class="hl-bi">sorted</span>(result, key=<span class="hl-kw">lambda</span> x: x[2], reverse=<span class="hl-kw">True</span>)</code></pre>
+</div>
+<div class="edges-row"><span class="edge-item">step_1 → step_2</span><span class="edge-item">step_1 → step_3</span><span class="edge-item">step_1 → step_4</span><span class="edge-item">step_2 → step_5</span><span class="edge-item">step_3 → step_4</span><span class="edge-item">step_4 → step_5</span><span class="edge-item">step_5 → step_6</span></div>
+<div class="final-node-label">Final Answer Node: <code>step_6</code></div></div>
+  </div>
+</details>
+    <div class="outputs-section">
+  <strong>Node Outputs</strong>
+  <table class="outputs-table">
+    <thead><tr><th>Node</th><th>Output</th></tr></thead>
+    <tbody><tr>
+  <td>step_1</td>
+  <td><pre>{
+  &quot;(&#x27;F&#x27;, &#x27;health_fitness&#x27;)&quot;: {
+    &quot;total_count&quot;: 149,
+    &quot;fraud_count&quot;: 9
+  },
+  &quot;(&#x27;M&#x27;, &#x27;grocery_pos&#x27;)&quot;: {
+    &quot;total_count&quot;: 308,
+    &quot;fraud_count&quot;: 130
+  },
+  &quot;(&#x27;F&#x27;, &#x27;personal_care&#x27;)&quot;: {
+    &quot;total_count&quot;: 211,
+    &quot;fraud_count&quot;: 24
+  },
+  &quot;(&#x27;M&#x27;, &#x27;personal_care&#x27;)&quot;: {
+    &quot;total_count&quot;: 112,
+    &quot;fraud_count&quot;: 7
+  },
+  &quot;(&#x27;F&#x27;, &#x27;shopping_pos&#x27;)&quot;: {
+    &quot;total_count&quot;: 259,
+    &quot;fraud_count&quot;: 61
+  },
+  &quot;(&#x27;M&#x27;, &#x27;shopping_net&#x27;)&quot;: {
+    &quot;total_count&quot;: 244,
+    &quot;fraud_count&quot;: 131
+  },
+  &quot;(&#x27;M&#x27;, &#x27;shopping_pos&#x27;)&quot;: {
+    &quot;total_count&quot;: 227,
+    &quot;fraud_count&quot;: 50
+  },
+  &quot;(&#x27;M&#x27;, &#x27;kids_pets&#x27;)&quot;: {
+    &quot;total_count&quot;: 164,
+    &quot;fraud_count&quot;: 7
+  },
+  &quot;(&#x27;F&#x27;, &#x27;shopping_net&#x27;)&quot;: {
+    &quot;total_count&quot;: 282,
+    &quot;fraud_count&quot;: 84
+  },
+  &quot;(&#x27;F&#x27;, &#x27;gas_transport&#x27;)&quot;: {
+    &quot;total_count&quot;: 224,
+    &quot;fraud_count&quot;: 30
+  },
+  &quot;(&#x27;F&#x27;, &#x27;food_dining&#x27;)&quot;: {
+    &quot;total_count&quot;: 170,
+    &quot;fraud_count&quot;: 15
+  },
+  &quot;(&#x27;M&#x27;, &#x27;gas_transport&#x27;)&quot;: {
+    &quot;total_count&quot;: 224,
+    &quot;fraud_count&quot;: 43
+  },
+  &quot;(&#x27;M&#x27;, &#x27;health_fitness&#x27;)&quot;: {
+    &quot;total_count&quot;: 125,
+    &quot;fraud_count&quot;: 4
+  },
+  &quot;(&#x27;M&#x27;, &#x27;travel&#x27;)&quot;: {
+    &quot;total_count&quot;: 69,
+    &quot;fraud_count&quot;: 9
+  },
+  &quot;(&#x27;M&#x27;, &#x27;entertainment&#x27;)&quot;: {
+    &quot;total_count&quot;: 158,
+    &quot;fraud_count&quot;: 15
+  },
+  &quot;(&#x27;F&#x27;, &#x27;kids_pets&#x27;)&quot;: {
+    &quot;total_count&quot;: 230,
+    &quot;fraud_count&quot;: 31
+  },
+  &quot;(&#x27;M&#x27;, &#x27;home&#x27;)&quot;: {
+    &quot;total_count&quot;: 214,
+    &quot;fraud_count&quot;: 1
+  },
+  &quot;(&#x27;M&#x27;, &#x27;misc_pos&#x27;)&quot;: {
+    &quot;total_count&quot;: 113,
+    &quot;fraud_count&quot;: 13
+  },
+  &quot;(&#x27;F&#x27;, &#x27;travel&#x27;)&quot;: {
+    &quot;total_count&quot;: 88,
+    &quot;fraud_count&quot;: 12
+  },
+  &quot;(&#x27;F&#x27;, &#x27;home&#x27;)&quot;: {
+    &quot;total_count&quot;: 232,
+    &quot;fraud_count&quot;: 25
+  }
+}
+... (28 total keys)</pre></td>
+</tr><tr>
+  <td>step_2</td>
+  <td><pre>{
+  &quot;(&#x27;F&#x27;, &#x27;health_fitness&#x27;)&quot;: 0.06040268456375839,
+  &quot;(&#x27;M&#x27;, &#x27;grocery_pos&#x27;)&quot;: 0.42207792207792205,
+  &quot;(&#x27;F&#x27;, &#x27;personal_care&#x27;)&quot;: 0.11374407582938388,
+  &quot;(&#x27;M&#x27;, &#x27;personal_care&#x27;)&quot;: 0.0625,
+  &quot;(&#x27;F&#x27;, &#x27;shopping_pos&#x27;)&quot;: 0.23552123552123552,
+  &quot;(&#x27;M&#x27;, &#x27;shopping_net&#x27;)&quot;: 0.5368852459016393,
+  &quot;(&#x27;M&#x27;, &#x27;shopping_pos&#x27;)&quot;: 0.22026431718061673,
+  &quot;(&#x27;M&#x27;, &#x27;kids_pets&#x27;)&quot;: 0.042682926829268296,
+  &quot;(&#x27;F&#x27;, &#x27;shopping_net&#x27;)&quot;: 0.2978723404255319,
+  &quot;(&#x27;F&#x27;, &#x27;gas_transport&#x27;)&quot;: 0.13392857142857142,
+  &quot;(&#x27;F&#x27;, &#x27;food_dining&#x27;)&quot;: 0.08823529411764706,
+  &quot;(&#x27;M&#x27;, &#x27;gas_transport&#x27;)&quot;: 0.19196428571428573,
+  &quot;(&#x27;M&#x27;, &#x27;health_fitness&#x27;)&quot;: 0.032,
+  &quot;(&#x27;M&#x27;, &#x27;travel&#x27;)&quot;: 0.13043478260869565,
+  &quot;(&#x27;M&#x27;, &#x27;entertainment&#x27;)&quot;: 0.0949367088607595,
+  &quot;(&#x27;F&#x27;, &#x27;kids_pets&#x27;)&quot;: 0.13478260869565217,
+  &quot;(&#x27;M&#x27;, &#x27;home&#x27;)&quot;: 0.004672897196261682,
+  &quot;(&#x27;M&#x27;, &#x27;misc_pos&#x27;)&quot;: 0.11504424778761062,
+  &quot;(&#x27;F&#x27;, &#x27;travel&#x27;)&quot;: 0.13636363636363635,
+  &quot;(&#x27;F&#x27;, &#x27;home&#x27;)&quot;: 0.10775862068965517
+}
+... (28 total keys)</pre></td>
+</tr><tr>
+  <td>step_3</td>
+  <td><pre>{
+  &quot;F&quot;: 190.92857142857142,
+  &quot;M&quot;: 166.21428571428572
+}</pre></td>
+</tr><tr>
+  <td>step_4</td>
+  <td><pre>{
+  &quot;(&#x27;M&#x27;, &#x27;grocery_pos&#x27;)&quot;: {
+    &quot;total_count&quot;: 308,
+    &quot;fraud_count&quot;: 130
+  },
+  &quot;(&#x27;F&#x27;, &#x27;personal_care&#x27;)&quot;: {
+    &quot;total_count&quot;: 211,
+    &quot;fraud_count&quot;: 24
+  },
+  &quot;(&#x27;F&#x27;, &#x27;shopping_pos&#x27;)&quot;: {
+    &quot;total_count&quot;: 259,
+    &quot;fraud_count&quot;: 61
+  },
+  &quot;(&#x27;M&#x27;, &#x27;shopping_net&#x27;)&quot;: {
+    &quot;total_count&quot;: 244,
+    &quot;fraud_count&quot;: 131
+  },
+  &quot;(&#x27;M&#x27;, &#x27;shopping_pos&#x27;)&quot;: {
+    &quot;total_count&quot;: 227,
+    &quot;fraud_count&quot;: 50
+  },
+  &quot;(&#x27;F&#x27;, &#x27;shopping_net&#x27;)&quot;: {
+    &quot;total_count&quot;: 282,
+    &quot;fraud_count&quot;: 84
+  },
+  &quot;(&#x27;F&#x27;, &#x27;gas_transport&#x27;)&quot;: {
+    &quot;total_count&quot;: 224,
+    &quot;fraud_count&quot;: 30
+  },
+  &quot;(&#x27;M&#x27;, &#x27;gas_transport&#x27;)&quot;: {
+    &quot;total_count&quot;: 224,
+    &quot;fraud_count&quot;: 43
+  },
+  &quot;(&#x27;F&#x27;, &#x27;kids_pets&#x27;)&quot;: {
+    &quot;total_count&quot;: 230,
+    &quot;fraud_count&quot;: 31
+  },
+  &quot;(&#x27;M&#x27;, &#x27;home&#x27;)&quot;: {
+    &quot;total_count&quot;: 214,
+    &quot;fraud_count&quot;: 1
+  },
+  &quot;(&#x27;F&#x27;, &#x27;home&#x27;)&quot;: {
+    &quot;total_count&quot;: 232,
+    &quot;fraud_count&quot;: 25
+  },
+  &quot;(&#x27;F&#x27;, &#x27;grocery_pos&#x27;)&quot;: {
+    &quot;total_count&quot;: 290,
+    &quot;fraud_count&quot;: 106
+  }
+}</pre></td>
+</tr><tr>
+  <td>step_5</td>
+  <td><pre>{
+  &quot;M&quot;: [
+    &quot;shopping_net&quot;,
+    0.5368852459016393
+  ],
+  &quot;F&quot;: [
+    &quot;grocery_pos&quot;,
+    0.36551724137931035
+  ]
+}</pre></td>
+</tr><tr>
+  <td>step_6</td>
+  <td><pre>[
+  [
+    &quot;M&quot;,
+    &quot;shopping_net&quot;,
+    0.536885
+  ],
+  [
+    &quot;F&quot;,
+    &quot;grocery_pos&quot;,
+    0.365517
+  ]
+]</pre></td>
+</tr></tbody>
+  </table>
+</div>
+  </div>
+</details>
+</div>
+</div>
+</body>
+</html>
