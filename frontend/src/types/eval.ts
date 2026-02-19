@@ -30,7 +30,7 @@ export interface DAGNodeSpec {
 }
 
 export interface GeneratedDAG {
-  question_id: string
+  question_id?: string
   description: string
   nodes: DAGNodeSpec[]
   edges: DAGEdge[]
@@ -73,7 +73,7 @@ export interface ExecutionResult {
   node_results: NodeExecutionResult[]
 }
 
-// ── Per-question trace (from eval_results.json) ───────────────────────────────
+// ── Per-question trace (normalised, used everywhere in UI) ────────────────────
 
 export interface QuestionTrace {
   question: Question
@@ -83,11 +83,10 @@ export interface QuestionTrace {
   dag_history: GeneratedDAG[]
   feedback_history: CriticFeedback[]
   messages: string[]
-  // ground_truth present in single_question_result.json
   ground_truth?: unknown
 }
 
-// ── Top-level eval_results.json shape ────────────────────────────────────────
+// ── Top-level normalised shape used everywhere in UI ─────────────────────────
 
 export interface EvalSummary {
   total_questions: number
@@ -105,15 +104,56 @@ export interface EvalResults {
   questions: QuestionTrace[]
 }
 
-// ── single_question_result.json shape ────────────────────────────────────────
-// (raw shape before normalisation)
+// ── Raw shape of single_question_result.json (before normalisation) ───────────
 
-export interface SingleQuestionResult {
+export interface RawSingleResult {
   question: Question
   ground_truth: unknown
-  iterations: number
+  iterations_used: number      // NOT "iterations"
   is_approved: boolean
-  execution_result: ExecutionResult | null
-  dag_history: GeneratedDAG[]
+  correct?: boolean
+  execution_result: {
+    question_id: string
+    success: boolean
+    final_answer: unknown
+    node_outputs: Record<string, unknown>  // dict keyed by node_id
+    error?: string | null
+    execution_time_ms?: number
+  } | null
+  dag_history: Array<{
+    iteration: number
+    dag: GeneratedDAG       // actual DAG nested one level deep
+    feedback: CriticFeedback
+  }>
   messages: string[]
+}
+
+// ── Raw shape of eval_results.json (before normalisation) ────────────────────
+
+export interface RawEvalResults {
+  summary: {
+    total_questions: number
+    successful_executions: number
+    execution_failures: number
+    critic_loop_exhausted: number
+    pass_rate: number
+  }
+  question_traces: Array<{    // NOT "questions"
+    question_id: string
+    question_text: string
+    difficulty: DifficultyLevel
+    difficulty_rank: number
+    total_iterations: number
+    final_answer: unknown
+    success: boolean
+    execution_error: string | null
+    execution_time_ms: number
+    node_outputs: Record<string, unknown>
+    iterations: Array<{
+      iteration: number
+      dag: GeneratedDAG
+      critic_feedback: CriticFeedback   // NOT "feedback"
+    }>
+    conversation_log: Array<{ role: string; content: string }>
+  }>
 }
