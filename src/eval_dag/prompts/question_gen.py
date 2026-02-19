@@ -43,12 +43,37 @@ You MUST respond with valid JSON matching this exact schema:
 def build_question_gen_prompt(
     dataset: dict[str, Any],
     metadata: dict[str, Any],
+    difficulty_hint: str = "all",
+    num_questions: int = 10,
 ) -> str:
-    """Build the user prompt for question generation."""
-    # Summarize dataset structure (keys, types, sample values)
+    """Build the user prompt for question generation.
+
+    Args:
+        dataset: The dataset to generate questions from.
+        metadata: Optional dataset metadata.
+        difficulty_hint: "easy" | "medium" | "hard" | "all" — narrows the LLM's
+            focus so it generates questions of the right difficulty band.
+        num_questions: How many questions to generate (1–10).
+    """
     dataset_summary = _summarize_dataset(dataset)
 
-    return f"""Generate 10 evaluation questions for this dataset.
+    if difficulty_hint == "all":
+        difficulty_instruction = (
+            f"Generate exactly {num_questions} questions, "
+            "spanning easy, medium, and hard difficulties "
+            "(ranks 1–10 scaled to the count requested). "
+            "Distribute difficulty evenly."
+        )
+    else:
+        difficulty_instruction = (
+            f"Generate exactly {num_questions} question(s), ALL at '{difficulty_hint}' difficulty. "
+            f"Every question MUST have difficulty_level = \"{difficulty_hint}\"."
+        )
+
+    return f"""Generate {num_questions} evaluation question(s) for this dataset.
+
+## Task
+{difficulty_instruction}
 
 ## Dataset Metadata
 {json.dumps(metadata, indent=2, default=str)}
@@ -56,7 +81,7 @@ def build_question_gen_prompt(
 ## Dataset Structure
 {dataset_summary}
 
-Generate exactly 10 questions ranked easy to hard. Respond with JSON only."""
+Respond with JSON only. The "questions" array must contain exactly {num_questions} item(s)."""
 
 
 def _summarize_dataset(dataset: dict[str, Any], max_depth: int = 3) -> str:

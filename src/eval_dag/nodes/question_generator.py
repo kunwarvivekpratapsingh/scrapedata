@@ -17,6 +17,9 @@ from eval_dag.prompts.question_gen import QUESTION_GEN_SYSTEM, build_question_ge
 from eval_dag.state.models import DifficultyLevel, Question
 from eval_dag.state.schemas import OrchestratorState
 
+# ─── Constants ────────────────────────────────────────────────────────────────
+_DEFAULT_NUM_QUESTIONS = 10
+
 logger = logging.getLogger(__name__)
 
 _RATE_LIMIT_PHRASES = ("rate_limit_exceeded", "rate limit", "tokens per min", "429")
@@ -67,10 +70,12 @@ def _parse_questions(content: str) -> list[Question]:
 
 
 def generate_questions_node(state: OrchestratorState) -> dict[str, Any]:
-    """LangGraph node: Generate 10 evaluation questions from the dataset.
+    """LangGraph node: Generate evaluation questions from the dataset.
 
     Calls the LLM with the dataset structure and metadata to produce
-    10 questions ranked easy to hard.
+    questions ranked easy to hard.  When called from the live API runner,
+    the optional _difficulty and _num_questions fields in state are used to
+    filter and slice the generated list before returning it.
 
     Retries up to _MAX_RETRIES times on rate-limit or JSON parse errors
     with exponential back-off. Raises on persistent failure so the
@@ -82,10 +87,22 @@ def generate_questions_node(state: OrchestratorState) -> dict[str, Any]:
     dataset = state["dataset"]
     metadata = state.get("metadata", {})
 
-    logger.info("Generating questions from dataset...")
+    # ── Live runner controls (absent in CLI runs) ──────────────────────────
+    difficulty_filter: str = state.get("_difficulty") or "all"
+    num_questions: int = state.get("_num_questions") or _DEFAULT_NUM_QUESTIONS
+    emit = state.get("_progress_cb")   # thread-safe callback or None
+
+    logger.info(
+        f"Generating questions (difficulty={difficulty_filter}, n={num_questions})..."
+    )
 
     llm = _get_llm()
-    prompt = build_question_gen_prompt(dataset, metadata)
+    prompt = build_question_gen_prompt(
+        dataset,
+        metadata,
+        difficulty_hint=difficulty_filter,
+        num_questions=num_questions,
+    )
 
     messages = [
         SystemMessage(content=QUESTION_GEN_SYSTEM),
@@ -122,7 +139,34 @@ def generate_questions_node(state: OrchestratorState) -> dict[str, Any]:
             f"Last error: {last_exc}"
         )
 
-    logger.info(f"Generated {len(questions)} questions")
+    # ── Filter by difficulty ───────────────────────────────────────────────
+    if difficulty_filter != "all":
+        questions = [
+            q for q in questions
+            if q.difficulty_level.value == difficulty_filter
+        ]
+        logger.info(
+            f"Filtered to {len(questions)} '{difficulty_filter}' questions"
+        )
+
+    # ── Slice to requested count ───────────────────────────────────────────
+    questions = questions[:num_questions]
+
+    logger.info(f"Using {len(questions)} questions for this run")
+
+    # ── Emit SSE progress event ────────────────────────────────────────────
+    if emit:
+        emit("questions_generated", {
+            "questions": [
+                {
+                    "id": q.id,
+                    "text": q.text,
+                    "difficulty_level": q.difficulty_level.value,
+                    "difficulty_rank": q.difficulty_rank,
+                }
+                for q in questions
+            ]
+        })
 
     ai_message = AIMessage(
         content=f"[QuestionGenerator] Generated {len(questions)} questions",

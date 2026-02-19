@@ -10,11 +10,26 @@ function fileLabel(name: string): string {
 
 export function Sidebar() {
   const { files, isLoading, error, refresh } = useResultFiles()
-  const { selectedFile, setSelectedFile } = useEvalStore()
+  const { selectedFile, setSelectedFile, currentPage, setCurrentPage } = useEvalStore()
 
   return (
     <aside className="w-60 shrink-0 bg-gray-950 border-r border-gray-800 flex flex-col">
-      <div className="px-4 py-4 border-b border-gray-800 flex items-center justify-between">
+      {/* Run Eval CTA */}
+      <div className="px-4 py-4 border-b border-gray-800">
+        <button
+          onClick={() => setCurrentPage('run')}
+          className={`w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+            currentPage === 'run'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-800 text-gray-300 hover:bg-blue-600/20 hover:text-blue-300 border border-gray-700 hover:border-blue-600'
+          }`}
+        >
+          <span>▶</span>
+          <span>Run Eval</span>
+        </button>
+      </div>
+
+      <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
           Result Files
         </span>
@@ -46,9 +61,9 @@ export function Sidebar() {
         {files.map((f) => (
           <button
             key={f}
-            onClick={() => setSelectedFile(f)}
+            onClick={() => { setSelectedFile(f); setCurrentPage('dashboard') }}
             className={`w-full text-left px-4 py-2.5 text-sm font-mono truncate transition-colors ${
-              selectedFile === f
+              selectedFile === f && currentPage === 'dashboard'
                 ? 'bg-blue-900/40 text-blue-300 border-r-2 border-blue-500'
                 : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
             }`}

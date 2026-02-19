@@ -27,6 +27,7 @@ def execute_dag_node(state: CriticLoopState) -> dict[str, Any]:
     """
     dag = state["current_dag"]
     dataset = state["dataset"]
+    emit = state.get("_progress_cb")   # thread-safe SSE callback or None
 
     logger.info(f"Executing approved DAG for question '{dag.question_id}'")
 
@@ -49,6 +50,16 @@ def execute_dag_node(state: CriticLoopState) -> dict[str, Any]:
             f"[Executor] {dag.question_id}: final answer node "
             f"'{dag.final_answer_node}' returned None — marking as FAILED"
         )
+
+    # ── Emit SSE progress event ────────────────────────────────────────────
+    if emit:
+        emit("execution_done", {
+            "question_id": dag.question_id,
+            "success": result.success,
+            "final_answer": result.final_answer,
+            "execution_time_ms": result.execution_time_ms,
+            "error": result.error,
+        })
 
     if result.success:
         ai_message = AIMessage(

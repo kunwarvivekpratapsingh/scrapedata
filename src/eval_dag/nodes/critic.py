@@ -236,6 +236,7 @@ def validate_dag_node(state: CriticLoopState) -> dict[str, Any]:
     question = state["question"]
     metadata = state.get("metadata", {})
     iteration = state.get("iteration_count", 1)
+    emit = state.get("_progress_cb")   # thread-safe SSE callback or None
 
     logger.info(
         f"Validating DAG for question '{question.id}' (iteration {iteration})"
@@ -261,7 +262,7 @@ def validate_dag_node(state: CriticLoopState) -> dict[str, Any]:
             ],
         )
 
-        return _build_return(feedback, dag, iteration)
+        return _build_return(feedback, dag, iteration, emit=emit)
 
     # Phase 2: Semantic validation (layer by layer)
     dataset = state.get("dataset", {})
@@ -316,13 +317,14 @@ def validate_dag_node(state: CriticLoopState) -> dict[str, Any]:
         suggestions=suggestions,
     )
 
-    return _build_return(feedback, dag, iteration)
+    return _build_return(feedback, dag, iteration, emit=emit)
 
 
 def _build_return(
     feedback: CriticFeedback,
     dag: GeneratedDAG,
     iteration: int,
+    emit: Any = None,
 ) -> dict[str, Any]:
     """Build the state update dict for the critic node."""
     status = "APPROVED" if feedback.is_approved else "REJECTED"
@@ -334,6 +336,16 @@ def _build_return(
         ),
         name="critic",
     )
+
+    # ── Emit SSE progress event ────────────────────────────────────────────
+    if emit:
+        emit("critic_result", {
+            "question_id": dag.question_id,
+            "iteration": iteration,
+            "is_approved": feedback.is_approved,
+            "issues_count": len(feedback.specific_errors),
+            "overall_reasoning": feedback.overall_reasoning,
+        })
 
     return {
         "current_feedback": feedback,

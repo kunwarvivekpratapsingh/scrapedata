@@ -11,7 +11,7 @@ parallel branches merge their outputs without data loss.
 from __future__ import annotations
 
 import operator
-from typing import Annotated, Any
+from typing import Annotated, Any, Callable, Optional
 
 from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
@@ -56,6 +56,13 @@ class OrchestratorState(TypedDict):
     # ── TRACING ──
     messages: Annotated[list[AnyMessage], add_messages]
 
+    # ── LIVE RUN CONTROLS (optional — only set by API runner, absent in CLI runs) ──
+    # Thread-safe callback: emit(event_type: str, payload: dict) -> None
+    _progress_cb: Optional[Callable[[str, dict], None]]
+    # Filter/slice controls injected at run time
+    _difficulty: Optional[str]       # "easy" | "medium" | "hard" | "all"
+    _num_questions: Optional[int]    # 1–10
+
 
 class CriticLoopState(TypedDict):
     """State for the inner critic loop subgraph.
@@ -94,3 +101,6 @@ class CriticLoopState(TypedDict):
 
     # ── TRACING ──
     messages: Annotated[list[AnyMessage], add_messages]
+
+    # ── LIVE RUN CONTROLS (forwarded from OrchestratorState via fan_out) ──
+    _progress_cb: Optional[Callable[[str, dict], None]]

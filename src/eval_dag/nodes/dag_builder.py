@@ -122,6 +122,9 @@ def build_dag_node(state: CriticLoopState) -> dict[str, Any]:
             # Non-rate-limit error or final rate-limit attempt — break out
             break
 
+    # ── Emit SSE progress event ────────────────────────────────────────────
+    emit = state.get("_progress_cb")
+
     if dag is not None:
         action = "regenerated" if feedback else "generated"
         logger.info(
@@ -135,6 +138,14 @@ def build_dag_node(state: CriticLoopState) -> dict[str, Any]:
             ),
             name="dag_builder",
         )
+        if emit:
+            emit("dag_built", {
+                "question_id": question.id,
+                "iteration": iteration,
+                "description": dag.description,
+                "node_count": len(dag.nodes),
+                "edge_count": len(dag.edges),
+            })
     else:
         logger.error(f"DAG generation failed for '{question.id}': {last_exc}")
         # Return an empty DAG so the critic can flag it cleanly
@@ -149,6 +160,14 @@ def build_dag_node(state: CriticLoopState) -> dict[str, Any]:
             content=f"[DAGBuilder] Iteration {iteration} for {question.id}: FAILED — {last_exc}",
             name="dag_builder",
         )
+        if emit:
+            emit("dag_built", {
+                "question_id": question.id,
+                "iteration": iteration,
+                "description": f"Generation failed: {last_exc}",
+                "node_count": 0,
+                "edge_count": 0,
+            })
 
     return {
         "current_dag": dag,

@@ -74,6 +74,7 @@ def fan_out_node(state: OrchestratorState) -> list[Send]:
     questions = state.get("questions", [])
     dataset = state["dataset"]
     metadata = state.get("metadata", {})
+    emit = state.get("_progress_cb")   # forward the SSE callback into each subgraph
 
     logger.info(f"Fanning out {len(questions)} questions to critic loops")
 
@@ -91,6 +92,7 @@ def fan_out_node(state: OrchestratorState) -> list[Send]:
                 dag_history=[],
                 execution_result=None,
                 messages=[],
+                _progress_cb=emit,
             ),
         )
         for q in questions
@@ -165,14 +167,24 @@ def process_question_node(state: CriticLoopState) -> dict[str, Any]:
        conversation log for every iteration — the complete audit trail
     """
     question = state["question"]
+    emit = state.get("_progress_cb")   # thread-safe SSE callback or None
     logger.info(f"Processing question '{question.id}'")
 
     final_state = critic_loop.invoke(state)
 
     execution_result: ExecutionResult | None = final_state.get("execution_result")
+    total_iterations = final_state.get("iteration_count", 0)
 
     # Build the full audit trace regardless of success/failure
     trace = _build_question_trace(question, final_state, execution_result)
+
+    # ── Emit question_complete SSE event ──────────────────────────────────
+    if emit:
+        emit("question_complete", {
+            "question_id": question.id,
+            "success": execution_result.success if execution_result else False,
+            "total_iterations": total_iterations,
+        })
 
     if execution_result is not None:
         return {
@@ -186,7 +198,7 @@ def process_question_node(state: CriticLoopState) -> dict[str, Any]:
         "failed_questions": [
             {
                 "question_id": question.id,
-                "iterations_used": final_state.get("iteration_count", 0),
+                "iterations_used": total_iterations,
                 "last_feedback": last_feedback.model_dump() if last_feedback else None,
             }
         ],

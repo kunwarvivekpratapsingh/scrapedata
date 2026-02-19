@@ -104,6 +104,26 @@ export interface EvalResults {
   questions: QuestionTrace[]
 }
 
+// ── Live runner types ─────────────────────────────────────────────────────────
+
+export type RunDifficulty = 'all' | 'easy' | 'medium' | 'hard'
+
+export interface RunConfig {
+  difficulty: RunDifficulty
+  num_questions: number
+}
+
+// Discriminated union — one type per SSE event type
+export type RunEvent =
+  | { type: 'run_started';          ts: string; payload: { run_id: string; num_questions: number; difficulty: string } }
+  | { type: 'questions_generated';  ts: string; payload: { questions: Array<{ id: string; text: string; difficulty_level: string; difficulty_rank: number }> } }
+  | { type: 'dag_built';            ts: string; payload: { question_id: string; iteration: number; description: string; node_count: number; edge_count: number } }
+  | { type: 'critic_result';        ts: string; payload: { question_id: string; iteration: number; is_approved: boolean; issues_count: number; overall_reasoning: string } }
+  | { type: 'execution_done';       ts: string; payload: { question_id: string; success: boolean; final_answer: unknown; execution_time_ms: number; error: string | null } }
+  | { type: 'question_complete';    ts: string; payload: { question_id: string; success: boolean; total_iterations: number } }
+  | { type: 'run_complete';         ts: string; payload: { output_file: string; summary: { total: number; passed: number; failed: number; pass_rate: number } } }
+  | { type: 'error';                ts: string; payload: { message: string; question_id?: string } }
+
 // ── Raw shape of single_question_result.json (before normalisation) ───────────
 
 export interface RawSingleResult {
