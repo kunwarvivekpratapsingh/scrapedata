@@ -73,10 +73,19 @@ def _structural_validation(dag: GeneratedDAG) -> tuple[list[str], bool]:
 
 _RATE_LIMIT_PHRASES = ("rate_limit_exceeded", "rate limit", "tokens per min", "429")
 
+# Maximum retry attempts for rate-limit errors and JSON parse failures
+_MAX_SEMANTIC_RETRIES = 3
+
+
 def _is_rate_limit_error(exc: Exception) -> bool:
     """Return True if the exception is an OpenAI rate-limit (429) error."""
     msg = str(exc).lower()
     return any(phrase.lower() in msg for phrase in _RATE_LIMIT_PHRASES)
+
+
+def _is_json_parse_error(exc: Exception) -> bool:
+    """Return True if the exception is a JSON decode / parse error."""
+    return isinstance(exc, (ValueError, KeyError)) or "json" in type(exc).__name__.lower()
 
 
 def _semantic_validation_for_layer(
@@ -90,9 +99,16 @@ def _semantic_validation_for_layer(
 ) -> LayerValidation:
     """Run LLM-based semantic validation for a single layer.
 
-    Retries up to 3 times on rate-limit errors with exponential backoff.
-    If all retries are exhausted due to rate limits, the layer is approved
-    with a warning (rate limits are infrastructure failures, not DAG failures).
+    Retry policy (up to _MAX_SEMANTIC_RETRIES attempts total):
+      - Rate-limit (429): exponential back-off 5s / 10s / 20s, then REJECT.
+        Rationale: silently approving on rate-limit hides real bugs; better to
+        reject and let the next iteration retry from a clean state.
+      - JSON parse failure: immediate retry (LLM output was malformed); if it
+        still fails after retries, REJECT with a clear parse-error message.
+      - Any other exception: REJECT immediately with the error text.
+
+    Rejecting on infrastructure failure is safer than approving — a subsequent
+    run (or the next DAG iteration) will re-validate cleanly.
     """
     llm = _get_llm()
 
@@ -114,52 +130,64 @@ def _semantic_validation_for_layer(
     node_ids = [n.node_id for n in layer_nodes]
     last_exc: Exception | None = None
 
-    for attempt in range(3):
+    for attempt in range(_MAX_SEMANTIC_RETRIES):
         try:
             response = llm.invoke(messages)
             result = _parse_critic_response(response.content)
-            # Success — break out of retry loop
+            # Success — exit retry loop
             break
         except Exception as e:
             last_exc = e
-            if _is_rate_limit_error(e) and attempt < 2:
-                wait = 5 * (2 ** attempt)  # 5s, 10s
+            is_rate_limit = _is_rate_limit_error(e)
+            is_parse_err  = _is_json_parse_error(e)
+            retryable     = is_rate_limit or is_parse_err
+
+            if retryable and attempt < _MAX_SEMANTIC_RETRIES - 1:
+                wait = 5 * (2 ** attempt)  # 5s, 10s, 20s
+                reason = "rate limit" if is_rate_limit else "JSON parse error"
                 logger.warning(
-                    f"Rate limit hit for layer {layer_index} (attempt {attempt + 1}/3). "
-                    f"Waiting {wait}s before retry..."
+                    f"Semantic validation {reason} for layer {layer_index} "
+                    f"(attempt {attempt + 1}/{_MAX_SEMANTIC_RETRIES}). "
+                    f"Retrying in {wait}s..."
                 )
                 time.sleep(wait)
                 continue
-            elif _is_rate_limit_error(e):
-                # All retries exhausted due to rate limiting — approve with warning.
-                # Rate limits are an infrastructure problem, not a DAG logic problem.
-                logger.warning(
-                    f"Layer {layer_index} semantic validation skipped after 3 rate-limit "
-                    f"retries. Approving layer to avoid penalising a potentially valid DAG."
-                )
-                return LayerValidation(
-                    layer_index=layer_index,
-                    nodes_in_layer=node_ids,
-                    is_valid=True,
-                    issues=[],
-                )
             else:
-                # Non-rate-limit error — fail immediately
-                logger.error(f"Semantic validation failed for layer {layer_index}: {e}")
+                # Either non-retryable error, or all retries exhausted.
+                # REJECT — never silently approve on infrastructure failure.
+                if is_rate_limit:
+                    msg = (
+                        f"Semantic validation could not complete for layer {layer_index}: "
+                        f"rate limit exhausted after {_MAX_SEMANTIC_RETRIES} attempts. "
+                        f"Treat this layer as unvalidated and regenerate the DAG."
+                    )
+                elif is_parse_err:
+                    msg = (
+                        f"Semantic validation produced malformed JSON for layer {layer_index} "
+                        f"after {attempt + 1} attempt(s): {e}. Regenerate the DAG."
+                    )
+                else:
+                    msg = f"Semantic validation error for layer {layer_index}: {e}"
+
+                logger.error(msg)
                 return LayerValidation(
                     layer_index=layer_index,
                     nodes_in_layer=node_ids,
                     is_valid=False,
-                    issues=[f"Semantic validation error: {e}"],
+                    issues=[msg],
                 )
     else:
-        # Loop exhausted without break — shouldn't happen but handle gracefully
-        logger.error(f"Semantic validation retry loop exhausted for layer {layer_index}: {last_exc}")
+        # for-loop exhausted without break — all retries used up
+        msg = (
+            f"Semantic validation failed for layer {layer_index} after "
+            f"{_MAX_SEMANTIC_RETRIES} attempts: {last_exc}"
+        )
+        logger.error(msg)
         return LayerValidation(
             layer_index=layer_index,
             nodes_in_layer=node_ids,
             is_valid=False,
-            issues=[f"Semantic validation error: {last_exc}"],
+            issues=[msg],
         )
 
     node_ids = [n.node_id for n in layer_nodes]

@@ -178,19 +178,33 @@ def _build_schema_summary(
         type_info = _describe_type(value)
         lines.append(f"  - {key}: {type_info}")
 
-    # Append an explicit field-name reference to prevent hallucination
-    lines.append("""
-## CRITICAL: Exact Field Names — Do NOT guess or invent field names
+    # Build a fully dynamic field-name reference from the actual dataset
+    # so this prompt works with ANY dataset, not just the fraud dataset.
+    lines.append("\n## CRITICAL: Exact Field Names — Do NOT guess or invent field names")
+    lines.append("The ONLY valid field names are those shown above.")
+    lines.append("Every dict key access in your node code must exactly match one of the")
+    lines.append("field names documented in this schema. Invented names cause KeyErrors.\n")
 
-  state_stats[state_code]     → {count, total_amt, fraud_count}
-  category_stats[category]    → {count, total_amt, fraud_count, fraud_rate, avg_amt}
-  time_series[YYYY-MM]        → {count, total_amt, fraud_count}
-    ⚠ time_series is FLAT monthly totals. It has NO per-category breakdown.
-    ⚠ To analyse by category AND time, use the raw `transactions` list.
-  gender_breakdown[M/F]       → {count, fraud_count, total_amt}
-  top_merchants (list item)   → {merchant, count, total_amt, fraud_count, fraud_rate}
-  date_range                  → {start, end}  (YYYY-MM-DD strings)
-  amount_distribution         → {min, max, mean, median, std, p25, p75, p95, p99}""")
+    # Enumerate every dict-of-dicts key in the dataset so the LLM has a
+    # compact at-a-glance reference for each nested structure.
+    for key, value in dataset.items():
+        if isinstance(value, dict) and value:
+            first_v = next(iter(value.values()))
+            if isinstance(first_v, dict):
+                inner_keys = list(first_v.keys())
+                first_k = next(iter(value))
+                lines.append(
+                    f"  {key}[key] -> "
+                    f"{{{', '.join(inner_keys)}}}  "
+                    f"  (example key: {repr(first_k)})"
+                )
+        elif isinstance(value, list) and value and isinstance(value[0], dict):
+            all_keys = list(value[0].keys())
+            lines.append(
+                f"  {key}[i]  -> "
+                f"{{{', '.join(all_keys)}}}  "
+                f"  ({len(value)} items)"
+            )
 
     # Append per-column field guide for the transactions list (from enriched metadata)
     field_guide = _build_transaction_field_guide(metadata)

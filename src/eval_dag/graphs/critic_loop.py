@@ -13,6 +13,7 @@ extracts results from.
 from __future__ import annotations
 
 import logging
+import os
 from typing import Literal
 
 from langgraph.graph import END, StateGraph
@@ -24,7 +25,9 @@ from eval_dag.state.schemas import CriticLoopState
 
 logger = logging.getLogger(__name__)
 
-MAX_ITERATIONS = 3
+# Maximum critic-loop iterations per question.
+# Override via environment variable: EVAL_MAX_ITERATIONS=5 py scripts/run_eval.py
+MAX_ITERATIONS = int(os.environ.get("EVAL_MAX_ITERATIONS", "3"))
 
 
 def _route_after_validation(

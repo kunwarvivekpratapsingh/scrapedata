@@ -207,6 +207,14 @@ FORBIDDEN_MODULE_NAMES = {
 def validate_code_safety(code: str) -> list[str]:
     """AST-walk to detect forbidden operations in node code.
 
+    Checks:
+    1. Import statements (any form)
+    2. Calls to forbidden builtins (exec, eval, open, etc.)
+    3. Dunder name access as a bare Name node (__builtins__, __class__, etc.)
+    4. Dunder attribute access via Attribute nodes (obj.__class__, obj.__dict__)
+       — this catches sandbox escapes like ().__class__.__bases__[0].__subclasses__()
+    5. Forbidden module names as bare Name references (os, sys, subprocess, etc.)
+
     Returns list of issues found (empty if safe).
     """
     issues: list[str] = []
@@ -217,11 +225,15 @@ def validate_code_safety(code: str) -> list[str]:
         issues.append("Code has syntax errors (cannot analyze safety)")
         return issues
 
+    # Whitelisted dunder names that the sandbox legitimately uses
+    _ALLOWED_DUNDERS = {"__name__", "__result__", "__inputs__"}
+
     for ast_node in ast.walk(tree):
-        # Check for import statements
+        # ── 1. Import statements ──────────────────────────────────────────────
         if isinstance(ast_node, ast.Import):
             for alias in ast_node.names:
-                if alias.name.split(".")[0] in FORBIDDEN_MODULE_NAMES:
+                top = alias.name.split(".")[0]
+                if top in FORBIDDEN_MODULE_NAMES:
                     issues.append(f"Forbidden import: '{alias.name}'")
                 else:
                     issues.append(
@@ -230,14 +242,15 @@ def validate_code_safety(code: str) -> list[str]:
 
         elif isinstance(ast_node, ast.ImportFrom):
             module = ast_node.module or ""
-            if module.split(".")[0] in FORBIDDEN_MODULE_NAMES:
+            top = module.split(".")[0]
+            if top in FORBIDDEN_MODULE_NAMES:
                 issues.append(f"Forbidden import: 'from {module}'")
             else:
                 issues.append(
                     f"Import statement not allowed in sandbox: 'from {module} import ...'"
                 )
 
-        # Check for forbidden function calls
+        # ── 2. Calls to forbidden builtins ────────────────────────────────────
         elif isinstance(ast_node, ast.Call):
             func = ast_node.func
             if isinstance(func, ast.Name) and func.id in FORBIDDEN_NAMES:
@@ -245,11 +258,26 @@ def validate_code_safety(code: str) -> list[str]:
             elif isinstance(func, ast.Attribute) and func.attr in FORBIDDEN_NAMES:
                 issues.append(f"Forbidden method call: '.{func.attr}()'")
 
-        # Check for forbidden name references (even without calling)
-        elif isinstance(ast_node, ast.Name) and ast_node.id.startswith("__"):
-            if ast_node.id not in ("__name__", "__result__", "__inputs__"):
+        # ── 3. Dunder bare Name references ────────────────────────────────────
+        elif isinstance(ast_node, ast.Name):
+            name = ast_node.id
+            if name.startswith("__") and name not in _ALLOWED_DUNDERS:
+                issues.append(f"Suspicious dunder name access: '{name}'")
+            elif name in FORBIDDEN_MODULE_NAMES:
+                # Catches: os.getcwd(), sys.exit() where module used as a name
+                issues.append(f"Forbidden module reference: '{name}'")
+
+        # ── 4. Dunder attribute access (sandbox escape vectors) ───────────────
+        elif isinstance(ast_node, ast.Attribute):
+            attr = ast_node.attr
+            if attr.startswith("__") and attr.endswith("__"):
+                # Allow only a handful of safe dunders that appear in normal code
+                _SAFE_DUNDER_ATTRS = {"__class__", "__dict__", "__doc__"} - {
+                    # Actually block class/dict/doc too — they're escape vectors
+                }
                 issues.append(
-                    f"Suspicious dunder access: '{ast_node.id}'"
+                    f"Dunder attribute access not allowed: '.{attr}' "
+                    f"(potential sandbox escape vector)"
                 )
 
     return issues

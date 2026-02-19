@@ -32,6 +32,24 @@ def execute_dag_node(state: CriticLoopState) -> dict[str, Any]:
 
     result = execute_approved_dag(dag, dataset)
 
+    # Detect the silent-failure case: sandbox reported success but the
+    # final-answer node produced None.  This usually means the final node
+    # forgot to return a value, or final_answer_node points to the wrong node.
+    if result.success and result.final_answer is None:
+        result = result.model_copy(update={
+            "success": False,
+            "error": (
+                f"Final answer node '{dag.final_answer_node}' returned None. "
+                "The node function must explicitly return a value. "
+                "Check that final_answer_node is set to the correct node id "
+                "and that the function body ends with a return statement."
+            ),
+        })
+        logger.warning(
+            f"[Executor] {dag.question_id}: final answer node "
+            f"'{dag.final_answer_node}' returned None — marking as FAILED"
+        )
+
     if result.success:
         ai_message = AIMessage(
             content=(
