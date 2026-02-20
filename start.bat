@@ -90,12 +90,18 @@ if not exist "frontend\node_modules" (
 :: ── 5. Kill any stale processes on ports 8000 and 5173 ───────────────────────
 echo.
 echo [5/5] Freeing ports 8000 and 5173...
-for /f "tokens=5" %%P in ('netstat -ano 2^>nul ^| findstr ":8000 "') do (
-    if not "%%P"=="0" taskkill /PID %%P /F >nul 2>&1
-)
+
+:: Kill all python.exe processes first — uvicorn's reloader spawns child
+:: processes that survive port-based kills and keep holding the port.
+powershell -NonInteractive -Command "Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue" >nul 2>&1
+
+:: Also kill any node processes on 5173
 for /f "tokens=5" %%P in ('netstat -ano 2^>nul ^| findstr ":5173 "') do (
     if not "%%P"=="0" taskkill /PID %%P /F >nul 2>&1
 )
+
+:: Brief pause so the OS reclaims ports before we try to bind them
+timeout /t 2 /nobreak >nul
 echo  OK - Ports cleared.
 
 :: ── Launch servers ────────────────────────────────────────────────────────────
