@@ -20,6 +20,16 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
+# ── Load .env from project root BEFORE any LangChain/OpenAI import ───────────
+# The CLI scripts (scripts/run_eval.py) do this too. Without it, OPENAI_API_KEY
+# from the .env file is never injected into os.environ and every LLM call fails
+# with a 401 "Incorrect API key" error.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env", override=True)
+except ImportError:
+    pass  # python-dotenv not installed — fall back to shell environment
+
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
