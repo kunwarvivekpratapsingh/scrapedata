@@ -44,13 +44,17 @@ echo  OK - Python %PYVER%
 :: ── 3. Check Node / npm ───────────────────────────────────────────────────────
 echo.
 echo [3/5] Checking Node.js / npm...
-npm --version >nul 2>&1
+
+:: Use "where" to locate npm.cmd — works reliably on Windows without output capture issues
+where npm >nul 2>&1
 if errorlevel 1 (
     echo  ERROR: npm not found. Install Node.js ^(https://nodejs.org^) and add to PATH.
     pause & exit /b 1
 )
-for /f %%V in ('npm --version 2^>^&1') do set NPMVER=%%V
-echo  OK - npm v%NPMVER%
+
+:: Use node.exe (plain binary, not a .cmd) to get the version safely
+for /f "tokens=1" %%V in ('node --version 2^>^&1') do set NODEVER=%%V
+echo  OK - Node.js %NODEVER% ^(npm ready^)
 
 :: ── 4. Install dependencies if needed ────────────────────────────────────────
 echo.
@@ -72,7 +76,7 @@ if errorlevel 1 (
 if not exist "frontend\node_modules" (
     echo  node_modules missing - running npm install ^(may take a minute^)...
     cd frontend
-    npm install --silent
+    call npm install --silent
     if errorlevel 1 (
         echo  ERROR: npm install failed.
         pause & exit /b 1
